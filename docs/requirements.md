@@ -21,6 +21,8 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 
 **Technical skill:** Comfortable using smartphones, movie-streaming websites, social media, and online review groups. She primarily uses her phone when searching for and choosing movies.
 
+**Interview notes:** Interviewed individually on 18 September 2026 at our rented room about her movie-watching habits, preferences, and difficulties when choosing movies.
+
 ### 2.2. Persona 2
 
 **Thuy Trang** - 20 - third-year student at Hanoi University of Civil Engineering, living in a rented room.
@@ -34,6 +36,8 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 **In her words:** “Normally, I choose a movie very quickly, but when watching with others, I can never seem to decide what to watch.”
 
 **Technical skill:** Familiar with smartphones and social media, especially TikTok. The interface should be visually clear, simple, and easy to use, particularly for first-time users.
+
+**Interview notes:** Interviewed individually on 18 September 2026 at our rented room about her movie-watching habits, preferences, and difficulties when choosing movies.
 ## 3. Scenarios
 
 ## 4. User stories
