@@ -42,6 +42,197 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 
 ## 4. User stories
 
+## User Stories
+
+### US01 — Recommendations without rating anything
+
+**Priority:** P0  
+**Points:** 3  
+**Screen:** `/recommendations`
+
+**As Duyen, I want to receive movie recommendations without rating anything first so that I get value from the app immediately.**
+
+**Acceptance criteria:**
+- Given Duyen has **0 ratings**, when she opens the recommendations page, then the system displays a trending/critically-acclaimed list *(BR6)*.
+- Given the list loads, when displayed, then it contains exactly **10 movies** *(BR3)*.
+
+**Tasks:**
+- Build cold-start query (trending/critically acclaimed, top 10) - @KatsuroHuy
+- Build `/recommendations` page UI for 0-rating state - @th3dummyking
+
+- Tests: 0-rating user gets exactly 10 trending movies - @PhuongLinhtla
+
+---
+
+### US02 — Rate a watched movie
+
+**Priority:** P0  
+**Points:** 3  
+**Screen:** `/movie/:id`
+
+**As Trang, I want to rate a movie I've watched so that future recommendations match my taste in thrillers and horror.**
+
+**Acceptance criteria:**
+- Given a user has watched a movie, when they submit a rating between **1 and 10**, then the rating is saved and reflected in their profile.
+- Given a user has already rated a movie once, when they try to rate it again, then the system **overwrites the previous rating instead of creating a duplicate**.
+
+**Tasks:**
+- Build rating submission endpoint (upsert, not duplicate) - @Nvhwng
+- Build rating UI on `/movie/:id` - @th3dummyking
+- Tests: re-rating overwrites previous rating - @PhuongLinhtla
+
+---
+
+### US03 — Personalized romance-thriller recommendations
+
+**Priority:** P0  
+**Points:** 5  
+**Screen:** `/recommendations`
+
+**As Duyen, I want to see a personalized list of romance-thriller movies with twist endings so that I can quickly find something worth watching during my meal.**
+
+**Acceptance criteria:**
+- Given Duyen has **≥5 rated movies** tagged romance or thriller, when she requests recommendations, then the system returns a personalized list weighted toward those genres *(BR5)*.
+- Given the personalized list is generated, when displayed, then it contains **at most 10 movies** *(BR3)*.
+
+**Tasks:**
+- Build collaborative-filtering query weighted by genre tags - @th3dummyking
+- Build `/recommendations` personalized list UI - @Nvhwng
+- Tests: ≥5 ratings triggers personalized path, max 10 results - @KatsuroHuy
+
+---
+
+### US04 — Exclude watched movies
+
+**Priority:** P0  
+**Points:** 3  
+**Screen:** `/movie/:id`
+
+**As Duyen, I want already-watched movies excluded from my default recommendations so that I don't waste time re-discovering the same titles.**
+
+**Acceptance criteria:**
+- Given a user has watched **25 movies**, when recommendations are generated, then none of those 25 movies appear in the result *(BR1)*.
+- Given a user marks a new movie as watched, when they request recommendations again, then that movie is **immediately excluded** from the next result set.
+
+**Tasks:**
+- Add watched-exclusion filter to recommendation query - @KatsuroHuy
+- Wire "mark as watched" action to affect next query immediately - @Nvhwng
+- Tests: 25 watched movies never reappear in results - @PhuongLinhtla
+
+---
+
+### US05 — Recommendations for watching with others
+
+**Priority:** P1  
+**Points:** 5  
+**Screen:** `/recommendations/setup`
+
+**As Trang, I want to specify who I'm watching with so that the system suggests movies that balance my preferences with theirs.**
+
+**Acceptance criteria:**
+- Given Trang selects "watching with a friend" and adds their profile, when recommendations are generated, then the list reflects **both users' rating histories**, not Trang's alone.
+- Given Trang watches alone (no companion selected), when recommendations are generated, then the list uses **only her own data**.
+
+**Tasks:**
+- Build companion-selection UI on `/recommendations/setup` - @th3dummyking
+- Build merged-preference query (2 users' histories) - @th3dummyking
+- Tests: solo vs. companion mode produce different result sets - @PhuongLinhtla
+
+---
+
+### US06 — Ask for theme/topic before recommending
+
+**Priority:** P0  
+**Points:** 5  
+**Screen:** `/recommendations/setup`
+
+**As Trang, I want to be asked what theme or topic I want to watch before seeing suggestions so that I don't have to search through multiple sources myself.**
+
+**Acceptance criteria:**
+- Given Trang opens the recommendation flow, when the list-request screen loads, then she is prompted to pick a theme/topic **before** any movies are shown.
+- Given Trang selects **"horror"**, when recommendations are generated, then all **10 results are tagged horror** *(BR3, BR4)*.
+
+**Tasks:**
+- Build theme/topic picker UI on `/recommendations/setup` - @KatsuroHuy
+- Wire theme filter into recommendation query - @th3dummyking
+- Tests: selecting "horror" returns only horror-tagged results - @Nvhwng
+
+---
+
+### US07 — Filter out low-quality movies
+
+**Priority:** P1  
+**Points:** 3  
+**Screen:** `/recommendations`
+
+**As Duyen, I want low-quality/low-rated movies filtered out of my personalized list so that I don't stop halfway through a slow, disappointing movie.**
+
+**Acceptance criteria:**
+- Given a movie has a rating of **5.8/10**, when personalized recommendations are generated, then that movie is excluded *(BR4)*.
+- Given a movie has a rating of **7.2/10**, when personalized recommendations are generated, then that movie is eligible for inclusion.
+
+**Tasks:**
+- Add rating-threshold filter to personalized query - @th3dummyking
+- Tests: 5.8 excluded, 7.2 included - @PhuongLinhtla
+- Update `docs/traceability.md` status for BR4 - @KatsuroHuy
+
+---
+
+### US08 — No duplicate movies in a list
+
+**Priority:** P1  
+**Points:** 2  
+**Screen:** `/recommendations`
+
+**As a user, I want each movie to appear only once per recommendation list so that the list doesn't feel repetitive or broken.**
+
+**Acceptance criteria:**
+- Given a recommendation list of **10 movies** is generated, when the list is returned, then all 10 movie IDs are **unique** *(BR7)*.
+- Given a movie qualifies under multiple recommendation logics, when the final list is assembled, then it appears **only once**.
+
+**Tasks:**
+- Add de-duplication step to final result assembly - @th3dummyking
+- Tests: no repeated movie ID across a 10-item list - @Nvhwng
+- Update `docs/traceability.md` status for BR7 - @KatsuroHuy
+
+---
+
+### US09 — Re-watch suggestion when undecided
+
+**Priority:** P2  
+**Points:** 2  
+**Screen:** `/recommendations`
+
+**As Duyen, I want the option to re-watch a suggested old favorite when I can't decide so that I still have something to watch during my meal.**
+
+**Acceptance criteria:**
+- Given Duyen has been idle on the recommendation screen for **30 seconds** without selecting a movie, when the timeout triggers, then the system suggests one previously-watched movie she rated **≥8/10** *(BR9)*.
+- Given no previously-watched movie meets the ≥8/10 threshold, when the timeout triggers, then the system **does not force** a re-watch suggestion.
+
+**Tasks:**
+- Build idle-timeout detection (30s) on `/recommendations` - @th3dummyking
+- Build re-watch suggestion query (rated ≥8/10) - @Nvhwng
+- Tests: no suggestion when no movie meets threshold - @PhuongLinhtla
+
+---
+
+### US10 — Cold-start recommendations for low-data users
+
+**Priority:** P0  
+**Points:** 5  
+**Screen:** `/recommendations`
+
+**As a user with very few ratings, I want to see trending/critically acclaimed movies instead of a poor personalized guess so that I still get a useful list early on.**
+
+**Acceptance criteria:**
+- Given a user has rated only **3 movies**, when they request recommendations, then the system returns the cold-start list, not a personalized one *(BR5/BR6)*.
+- Given a cold-start movie is selected, when checked against BR8, then it must have **at least 100 ratings** to qualify for that pool.
+
+**Tasks:**
+- Build <5-ratings detection + cold-start fallback trigger - @th3dummyking
+- Add min-100-ratings filter for cold-start pool - @KatsuroHuy
+- Tests: 3-rating user gets cold-start list, not personalized - @Nvhwng
+
 ## 5. Business rules
 ### BR1 — Watched Movies
 The system must not recommend movies the user has marked as watched or has watched at least 90% of the runtime.
