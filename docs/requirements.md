@@ -5,6 +5,35 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 
 ## 2. Personas
 
+### 2.1. Persona 1
+
+**Ngọc Duyên** - 19 - second-year student at Hanoi University of Science and Technology, living in a rented room.
+
+**Description:** Duyen usually takes advantage of mealtimes or her free time to watch movies alone. Since she does not want to pay for movies, she mainly searches for movies on free movie-streaming websites and also frequently refers to online movie-review groups to discover new movies. She particularly enjoys movies that combine romance and thriller elements, especially those with complex plots and many unexpected “twists.” However, when there are too many choices and she does not know what to watch, Duyen often goes back to watching old movies that she has enjoyed before. She is also quite likely to stop watching a movie if its pace is slow and not engaging enough. Since she often watches movies during short periods of time, such as mealtimes, Duyen wants the system to provide suitable recommendations from the beginning, for example, by asking who she is watching the movie with.
+
+**Desired recommendation feature:** Asking “Who are you watching this movie with?”
+
+**Goal:** Make use of her mealtimes to watch movies and relax after a day of studying.
+
+**Blocked by:** Too many choices and difficulty determining which movies are worth watching.
+
+**In her words:** “There are so many movies to watch, but finding one I actually want to watch is the problem.”
+
+**Technical skill:** Comfortable using smartphones, movie-streaming websites, social media, and online review groups. She primarily uses her phone when searching for and choosing movies.
+
+### 2.2. Persona 2
+
+**Thuy Trang** - 20 - third-year student at Hanoi University of Civil Engineering, living in a rented room.
+
+**Description:** Trang usually takes advantage of mealtimes to watch movies alone, mainly searching for movies on free movie-streaming websites. She particularly enjoys horror or thriller movies with a sad and emotional tone. However, choosing a movie is not always that simple. When she cannot find a suitable movie, Trang often returns to movies she has watched before, sometimes turning to recommendations on TikTok. For Trang, the actors' appearance is a key factor in determining whether she continues watching a movie. She would like the system to ask about the topic or content she wants to watch beforehand to narrow down the choices. Normally, she takes only about two minutes to choose a movie, but when watching with her boyfriend or friends, the process can take considerably longer because she needs to consider the preferences of multiple people.
+
+**Goal:** Quickly find a movie that matches her preferences and the preferences of the people she is watching with.
+
+**Blocked by:** Difficulty choosing a movie when watching with her boyfriend or friends because their preferences may differ; she also needs to search through multiple sources before finding a suitable movie.
+
+**In her words:** “Normally, I choose a movie very quickly, but when watching with others, I can never seem to decide what to watch.”
+
+**Technical skill:** Familiar with smartphones and social media, especially TikTok. The interface should be visually clear, simple, and easy to use, particularly for first-time users.
 ## 3. Scenarios
 
 ## 4. User stories
