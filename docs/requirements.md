@@ -39,6 +39,26 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 
 **Interview notes:** Interviewed individually on 18 September 2026 at our rented room about her movie-watching habits, preferences, and difficulties when choosing movies.
 ## 3. Scenarios
+### Scenario 1 — Duyen Finds a Movie During Mealtime
+
+1. Duyen finishes studying and wants to watch a movie while having her meal, but scrolling through free movie sites herself usually takes too long because there are too many choices.
+2. She opens SmartCine and chooses to get movie recommendations instead.
+3. Duyen provides her preferred movie interests, such as romance and thriller.
+4. SmartCine uses her preferences and previous ratings to narrow down the available movies.
+5. Duyen looks through the recommendations and chooses a movie with a complex plot and unexpected twists.
+6. She starts watching the movie and later rates it based on her experience.
+7. SmartCine saves the rating and uses it to improve her future recommendations.
+
+### Scenario 2 — Trang Chooses a Movie to Watch With Others
+
+1. Trang wants to watch a movie with her boyfriend or friends but they cannot agree on what to watch.
+2. She opens SmartCine and starts looking for a movie recommendation.
+3. SmartCine asks who she is watching the movie with, and Trang indicates that she is watching with other people.
+4. Trang provides the group's preferred movie topics, such as horror or thriller.
+5. SmartCine uses the available preferences to narrow down the movie choices.
+6. Trang and the people watching with her look through the recommendations and compare the suggested movies.
+7. They choose a movie that matches their shared preferences.
+8. Trang watches the movie and provides a rating afterwards so SmartCine can improve future recommendations.
 
 ## 4. User stories
 
@@ -285,6 +305,7 @@ When multiple movies have an identical predicted score, they must be ordered by 
 
 **Worked example:**
 Movie A and Movie B both score 8.5 predicted match. Movie A has 1,200 ratings, Movie B has 900. Movie A appears first.
+
 ## 6. Screens and flow
 
 
