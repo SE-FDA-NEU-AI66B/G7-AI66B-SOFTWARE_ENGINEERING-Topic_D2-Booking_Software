@@ -42,8 +42,6 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 
 ## 4. User stories
 
-## User Stories
-
 ### US01 — Recommendations without rating anything
 
 **Priority:** P0  
