@@ -43,52 +43,59 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 ## 4. User stories
 
 ## 5. Business rules
-### BR1 - Watched Movies
-The system must not recommend movies thet the user has already watched. 
-
-***Worked example:**
-If a user has watched **25 movies**, those 25 move is must be excluded from the recommendation list.
-
-### BR2 - Age Rating Limit
-The system must not recommend movies above the user's allowed age rating.
-
-*** Worked example:**
-If a user's age is **15**, movies rated **18** must not appear in their recommendations.
-
-### BR3 - Maximum Recommendations
-Each recommendation engine finds **18 suitable movies**, SmartCine must display only the top **10** recommendations.
+### BR1 — Watched Movies
+The system must not recommend movies the user has marked as watched or has watched at least 90% of the runtime.
 
 **Worked example:**
-If a user has rated only **3 movies**, SmartCine must not generate a fully personalized recommendation list and should use the cold-start recommendation rules instead.
-### BR4 - Minimum Movie Rating 
-A movie must have a rating of **6.0/10** to be included in personalized recommendations.
+If a user has watched 25 movies (marked watched or ≥90% runtime viewed), those 25 movies must be excluded from the recommendation results.
+
+### BR2 — Age Rating Limit
+The system must not recommend movies whose age rating is strictly higher than the user's allowed rating. A movie rated exactly at the user's allowed level is permitted.
 
 **Worked example:**
-If a movie has a rating of **5.8/10**, it must be excluded. A movie rated **7.2/10** can be recommended.
+If a user's allowed rating is 15, movies rated 18+ must not appear in their recommendations. A movie rated exactly 15 is allowed to appear.
 
-### BR5 Minimum Preference Data
-A returning user's personalized recommendations must use at least **5 rated or watched movies** as preference data.
+### BR3 — Maximum Recommendations
+Each recommendation request must return a maximum of 10 movies.
 
-**Worked example:**  
-If a user has rated only **3 movies**, SmartCine must not generate a fully personalized recommendation list and should use the cold-start recommendation rules instead.
+**Worked example:**
+If the recommendation engine finds 18 suitable movies, SmartCine must display only the top 10 recommendations.
+
+### BR4 — Minimum Movie Rating
+A movie must have a minimum rating of 6.0/10 to be included in personalized recommendations. This threshold applies to the personalized (collaborative-filtering) pool only; the cold-start pool is governed separately by BR8.
+
+**Worked example:**
+If a movie has a rating of 5.8/10, it must be excluded from the personalized pool. A movie rated 7.2/10 can be recommended.
+
+### BR5 — Preference Data Threshold
+Personalized recommendations require at least 5 rated or watched movies as preference data. Users below this threshold fall under BR6 (Cold-Start Recommendations) instead.
+
+**Worked example:**
+If a user has rated only 3 movies, SmartCine must not generate a fully personalized list and must use the cold-start rules (BR6) instead.
 
 ### BR6 — Cold-Start Recommendations
-New users with fewer than **5 ratings** must receive recommendations based on trending or critically acclaimed movies rather than personalized preference data.
+New users below the BR5 threshold (fewer than 5 ratings) must receive recommendations based on trending or critically acclaimed movies rather than personalized preference data.
 
-**Worked example:**  
-If a new user has rated **2 movies**, SmartCine must use trending or critically acclaimed movies instead of personalized collaborative filtering.
+**Worked example:**
+If a new user has rated 2 movies, SmartCine must use trending or critically acclaimed movies (see BR8 for eligibility) instead of personalized collaborative filtering.
 
 ### BR7 — Unique Recommendations
-A movie must not appear more than **once** in the same recommendation result.
+A movie must not appear more than once in the same recommendation result.
 
-**Worked example:**  
-If the system generates **10 recommendations**, all **10 movie IDs must be unique**. The same movie cannot appear at positions **3 and 8**.
+**Worked example:**
+If the system generates 10 recommendations, all 10 movie IDs must be unique. The same movie cannot appear at positions 3 and 8.
 
 ### BR8 — Minimum Rating Count
-A movie must have at least **100 ratings** to qualify for the critically acclaimed recommendation pool.
+A movie must have at least 100 ratings to qualify for the critically acclaimed / cold-start recommendation pool (see BR6).
 
-**Worked example:**  
-If Movie A has **85 ratings** with an average score of **8.9/10**, it must be excluded. Movie B with **500 ratings** and an average score of **8.4/10** qualifies.
+**Worked example:**
+If Movie A has 85 ratings with an average score of 8.9/10, it must be excluded. Movie B with 500 ratings and an average score of 8.4/10 qualifies.
+
+### BR9 — Ranking Tie-Break
+When multiple movies have an identical predicted score, they must be ordered by rating count (descending), then by release year (newest first).
+
+**Worked example:**
+Movie A and Movie B both score 8.5 predicted match. Movie A has 1,200 ratings, Movie B has 900. Movie A appears first.
 ## 6. Screens and flow
 
 
