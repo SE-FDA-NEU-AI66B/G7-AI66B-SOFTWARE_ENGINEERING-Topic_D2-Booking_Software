@@ -90,3 +90,54 @@ A movie must have at least **100 ratings** to qualify for the critically acclaim
 **Worked example:**  
 If Movie A has **85 ratings** with an average score of **8.9/10**, it must be excluded. Movie B with **500 ratings** and an average score of **8.4/10** qualifies.
 ## 6. Screens and flow
+
+
+
+| Route | Purpose | Access | Priority |
+|---|---|---|---|
+| `/` | Landing page — intro, entry point | G | P0 |
+| `/login` | Sign in / sign up | G | P0 |
+| `/recommendations/setup` | Ask theme/topic and who you're watching with, before generating a list | U | P0 |
+| `/recommendations` | Show personalized or cold-start movie list | U | P0 |
+| `/movie/:id` | Movie detail — view info, mark as watched, submit a rating | U | P0 |
+| `/profile/ratings` | View and manage movies you've rated | U | P1 |
+
+
+**Flow diagram:**
+
+
+
+
+```
+                     +------------------+
+                     |        /         |   (not signed in)
+                     +------------------+
+                              |
+                              | sign in
+                              v
+                     +------------------+
+                     |     /login       |
+                     +------------------+
+                              |
+                              | success
+                              v
+               +-------------------------------+
+               |   /recommendations/setup      |
+               +-------------------------------+
+                              |
+                              | submit
+                              v
+   +-->  +--------------------------+   pick a movie    +------------------------+
+   |     |     /recommendations     | -----------------> |      /movie/:id        |
+   |     |                          | <----------------- |  rate / mark watched   |
+   |     +--------------------------+        back        +------------------------+
+   |                    |
+   |                    | view ratings
+   |                    v
+   |          +------------------------+
+   |          |    /profile/ratings    |
+   |          +------------------------+
+   |                    |
+   +--------------------+
+            back
+```
