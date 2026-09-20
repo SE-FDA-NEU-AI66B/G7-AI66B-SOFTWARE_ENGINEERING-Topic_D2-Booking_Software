@@ -19,7 +19,7 @@ has no goal and you are just doing tasks.>
 
 | Issue | Người làm | Đã đóng? |
 |-------|-----------|----------|
-| [Chore] Refine backlog cho Sprint N | @ (PO) | |
+| [Chore] Refine backlog cho Sprint N | @ | |
 | [Chore] Sprint N wrap-up | @ (SM) | |
 
 ### Committed
@@ -60,3 +60,12 @@ has no goal and you are just doing tasks.>
 | Member | Planning | Review | Retro |
 |--------|----------|--------|-------|
 | @      |          |        |       |
+
+
+
+
+## Sprint 1 (weeks 5–6)
+Goal: Agree on the product vision, personas, scenarios, business rules, and screens/flow so all 10 user stories are clear and testable before implementation begins.
+Committed 0 · Completed 0 · Velocity: not applicable (requirements sprint)
+Not finished: none.
+SM Sprint 2: @th3dummyking
