@@ -1,0 +1,31 @@
+@startuml Rate_a_Movie
+title Rate a Movie (US02)
+
+actor User
+participant "SmartCine App" as App
+participant "Rating Service" as RateSvc
+database "Ratings DB" as DB
+
+User -> App: Submit rating (movieId, score)
+App -> RateSvc: submitRating(userId, movieId, score)
+
+alt score is between 1 and 10
+    RateSvc -> DB: check for existing rating (userId, movieId)
+    DB --> RateSvc: existing rating (or none)
+
+    alt existing rating found
+        RateSvc -> DB: overwrite existing rating
+    else no existing rating
+        RateSvc -> DB: insert new rating
+    end
+
+    DB --> RateSvc: save confirmed
+    RateSvc --> App: rating saved
+    App --> User: show updated rating
+
+else score out of range (unhappy path)
+    RateSvc --> App: validation error
+    App --> User: show error "Rating must be between 1 and 10"
+end
+
+@enduml

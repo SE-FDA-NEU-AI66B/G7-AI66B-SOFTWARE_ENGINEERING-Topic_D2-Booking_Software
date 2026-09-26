@@ -1,0 +1,33 @@
+@startuml Get_Movie_Recommendations
+title Get Movie Recommendations (US01 / US03 / US10)
+
+actor User
+participant "SmartCine App" as App
+participant "Recommendation Service" as RecSvc
+database "Movie & Ratings DB" as DB
+
+User -> App: Request recommendations
+App -> RecSvc: getRecommendations(userId)
+RecSvc -> DB: fetch user's rating count
+DB --> RecSvc: ratingCount
+
+alt ratingCount >= 5 (BR5 - personalized path, US03)
+    RecSvc -> DB: fetch user's ratings & genre preferences
+    DB --> RecSvc: preference data
+    RecSvc -> RecSvc: run collaborative filtering
+    RecSvc -> DB: fetch candidate movies (rating >= 6.0, BR4)
+    DB --> RecSvc: candidate movies
+    RecSvc -> RecSvc: exclude already-watched movies (BR1)
+    RecSvc -> RecSvc: remove duplicate movies (BR7)
+    RecSvc -> RecSvc: apply tie-break ordering (BR9)
+    RecSvc -> RecSvc: limit to top 10 (BR3)
+else ratingCount < 5 (BR6 - cold start path, US10)
+    RecSvc -> DB: fetch trending / critically acclaimed movies (rating count >= 100, BR8)
+    DB --> RecSvc: trending movies
+    RecSvc -> RecSvc: limit to top 10 (BR3)
+end
+
+RecSvc --> App: recommendation list (<= 10 movies)
+App --> User: display recommendations (US01)
+
+@enduml
