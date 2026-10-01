@@ -1,0 +1,18 @@
+<%- include('partials/header') %>
+<h1><%= movie.title %> <small>(<%= movie.year %>)</small></h1>
+<p class="muted"><%= movie.genres.join(', ') %> · <%= movie.ageRating %>+ · ★ <%= movie.rating %> (<%= movie.ratingCount %> ratings)</p>
+
+<% if (watched) { %>
+  <p>✅ Marked as watched</p>
+<% } else { %>
+  <form method="post" action="/movie/<%= movie.id %>/watched"><button class="btn">Mark as watched</button></form>
+<% } %>
+
+<h3>Your rating<%= myScore ? ': ' + myScore + '/10' : '' %></h3>
+<form method="post" action="/movie/<%= movie.id %>/rate">
+  <input type="number" name="score" min="1" max="10" value="<%= myScore || '' %>" required>
+  <button class="btn">Save rating</button>
+</form>
+
+<p><a href="/recommendations">← Back to recommendations</a></p>
+<%- include('partials/footer') %>

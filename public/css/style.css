@@ -1,0 +1,13 @@
+body { font-family: system-ui, sans-serif; margin: 0; color: #222; }
+nav { display: flex; gap: 1rem; align-items: center; padding: .75rem 1.5rem; background: #111; }
+nav a, nav .link { color: #fff; text-decoration: none; }
+nav form { margin-left: auto; }
+.brand { font-weight: bold; margin-right: 1rem; }
+main { max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+.btn { background: #e50914; color: #fff; border: 0; padding: .5rem 1rem; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+.link { background: none; border: 0; cursor: pointer; font: inherit; padding: 0; color: #06c; }
+.muted { color: #777; }
+fieldset { margin-bottom: 1rem; }
+label { display: block; margin: .25rem 0; }
+.cards { list-style: none; padding: 0; }
+.cards li { padding: .75rem; border: 1px solid #ddd; border-radius: 6px; margin-bottom: .5rem; }

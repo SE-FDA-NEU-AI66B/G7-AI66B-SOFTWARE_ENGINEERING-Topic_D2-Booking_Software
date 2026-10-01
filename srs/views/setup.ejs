@@ -1,0 +1,17 @@
+<%- include('partials/header') %>
+<h1>What are you in the mood for?</h1>
+<form method="post" action="/recommendations/setup">
+  <fieldset>
+    <legend>Who are you watching with?</legend>
+    <label><input type="radio" name="withOthers" value="solo" checked> Just me</label>
+    <label><input type="radio" name="withOthers" value="group"> With others</label>
+  </fieldset>
+  <fieldset>
+    <legend>Themes / topics</legend>
+    <% genres.forEach(g => { %>
+      <label><input type="checkbox" name="genres" value="<%= g %>"> <%= g %></label>
+    <% }) %>
+  </fieldset>
+  <button class="btn">Show recommendations</button>
+</form>
+<%- include('partials/footer') %>
