@@ -238,16 +238,17 @@ Owner: Hưng (@Nvhwng)
 | US09 | rating, watch_history |
 | US10 | account, profile |
 
-### API design
+# API design
 
 #### Core RESTful APIs (P0 User Stories)
 
 | Method | Path | Input | Success | Errors |
 |---|---|---|---|---|
 | **POST** | `/api/v1/auth/login` | `email`, `password` | **200** · `access_token` (JWT), list of profiles | **400** missing required credentials<br>**401** invalid email or password *(US01, US10)* |
+| **GET** | `/api/v1/profiles` | *Header:* `Authorization: Bearer <access_token>` | **200** · list of profiles belonging to the account (`id`, `display_name`, `max_age_rating`) | **401** unauthorized account token *(US10)* |
 | **POST** | `/api/v1/profiles/select` | *Header:* `Authorization: Bearer <access_token>`<br>`profile_id` | **200** · `active_profile_id`, `redirectTo: "/recommendations"` | **401** unauthorized account token<br>**404** profile not found or does not belong to account *(US10, BR10)* |
 | **GET** | `/api/v1/recommendations/setup/genres` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>` | **200** · list of available genres/themes (e.g., Action, Horror) | **401** missing or invalid JWT<br>**403** missing or invalid `X-Profile-Id` header *(US06)* |
-| **GET** | `/api/v1/recommendations` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>`<br>*Query:* `genre_id` *(optional)* | **200** · list of 10 unique movies (personalized or cold-start) | **401** unauthorized JWT<br>**403** missing active profile header<br>**422** invalid genre_id query parameter *(US01, US03; BR1–BR8)* |
+| **GET** | `/api/v1/recommendations` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>`<br>*Query:* `genre_id` *(optional)*, `companion_profile_id` *(optional — triggers the ratio-merge in US05; must belong to the same account as BR10 requires)* | **200** · list of 10 unique movies (personalized, cold-start, or merged if `companion_profile_id` is present) | **401** unauthorized JWT<br>**403** missing active profile header<br>**404** `companion_profile_id` not found or belongs to another account (BR10)<br>**422** invalid `genre_id` query parameter *(US01, US03, US05; BR1–BR10)* |
 | **POST** | `/api/v1/ratings` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>`<br>`movie_id`, `score` (1-10) | **201** · rating created or updated (upsert) | **400** score outside 1-10 range<br>**401** unauthorized<br>**404** movie_id not found *(US02)* |
 | **POST** | `/api/v1/movies/:id/watch` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>` | **200** · movie marked as watched manually in `watch_history` | **401** unauthorized<br>**404** movie ID not found in database *(US04, BR1)* |
 
@@ -255,4 +256,4 @@ Owner: Hưng (@Nvhwng)
 
 | Method | Path | Input | Success | Errors |
 |---|---|---|---|---|
-| **POST** | `/api/v1/callback/watch-event` | *Header:* `X-Signature: <hmac_sha256>`<br>`watch_session_id`, `event_id`, `watched_seconds`, `runtime_seconds` | **200** · watch event recorded (written to `watch_history` if progress ≥ 90%) | **401** invalid HMAC signature or expired timestamp<br>**404** watch_session_id not found<br>**422** duplicate callback event_id ignored *(BR1)* |
+| **POST** | `/api/v1/callback/watch-event` | *Header:* `X-Signature: <hmac_sha256>`<br>`watch_session_id`, `event_id`, `watched_seconds`, `runtime_seconds`<br>*(note: `profile_id` is not passed directly — it is resolved server-side from `watch_session_id` via the `watch_session` table)* | **200** · watch event recorded (written to `watch_history` if progress ≥ 90%) | **401** invalid HMAC signature or expired timestamp<br>**404** watch_session_id not found<br>**422** duplicate callback event_id ignored *(BR1)* |
