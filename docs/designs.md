@@ -1,7 +1,4 @@
 # Architecture
-
-Owner: Hưng (@Nvhwng)
-
 ## Container
 
 ```
@@ -106,55 +103,7 @@ Owner: Hưng (@Nvhwng)
      +-----------------------+
 ```
 
-## Design decisions
-
-### ADR-1: SQLite instead of PostgreSQL/Redis for M2
-
-**Options:** SQLite (single file, no setup) · PostgreSQL via Docker · PostgreSQL installed directly on the machine.
-
-**Chose:** SQLite, with in-memory caching via a `Cache adapter`. The Container diagram above shows the target architecture; migration happens gradually from Sprint 3.
-
-**Why:** The instructor clones and runs the project via SETUP.md in 15 minutes. PostgreSQL + Redis require Docker or separate installation plus connection strings — the most likely point of failure in that first step. Schema is written in SQLAlchemy without Postgres-specific types (`citext`, native `uuid`), so switching DB later is just a connection-string change; `PRAGMA foreign_keys=ON` makes SQLite enforce FK/CASCADE the same way Postgres does. The mock Streaming Site runs as a route in the same app (`/mock-partner`), so no second container is needed yet.
-
-**What would change our mind:** Concurrent writes from multiple real users, or measuring `/recommendations` slower than our latency target without an out-of-process cache.
-
----
-
-### ADR-2: One FastAPI app with internal modules, not microservices
-
-**Options:** One FastAPI app with Services as internal modules (function calls) · Each domain (Auth, Profile, Recommendation, Rating, Watch) as a separate microservice communicating over the network.
-
-**Chose:** Auth, Profile, Rating, Watch, and Recommendation as modules inside one process, under `app/<module>/`.
-
-**Why:** A 4-person team, one semester, no current need to scale any part independently. No network hop between modules means simpler debugging and testing within a single process, while the module boundaries stay clean enough to split out later if needed.
-
-**What would change our mind:** Model inference becoming heavy enough to need independent scaling or deployment — at that point, only the Recommendation Service would be split out.
-
----
-
-### ADR-3: JWT for account identity + X-Profile-Id header for profile context
-
-**Options:** Re-issue a new profile-scoped JWT every time the user switches profiles · Use one JWT for account authentication plus a custom `X-Profile-Id` header to scope each request to the active profile.
-
-**Chose:** JWT for account identity, `X-Profile-Id` header for profile context.
-
-**Why:** SmartCine's 1 Account–N Profiles model (BR10) needs a lightweight way to know which profile a request is for, without the server overhead of re-issuing tokens on every profile switch. This also keeps concerns separate: the JWT proves who the account is, the header scopes which profile's data is being read or written.
-
-**What would change our mind:** Introducing per-profile security policies (e.g. a PIN check for a kids' profile on sensitive actions) — at that point, isolated per-profile session tokens would be worth revisiting.
-
----
-
-### ADR-4: Inbound webhook instead of polling for partner watch events
-**Options:** SmartCine periodically polls the partner's API for playback progress · The partner pushes real-time watch events to SmartCine via an inbound webhook (`POST /api/v1/callback/watch-event`), authenticated with an HMAC-SHA256 signature.
-
-**Chose:** Inbound webhook with HMAC-SHA256 signature verification.
-
-**Why:** BR1 requires `watch_history` to update automatically from partner playback data. A webhook delivers updates in real time without the resource cost of repeated polling, and the HMAC signature confirms the request really came from the partner and wasn't tampered with.
-
-**What would change our mind:** Traffic spiking high enough that incoming webhook calls would need to be queued (e.g. via Kafka/RabbitMQ) before hitting the database, instead of being written directly.
 # Data model
-
-Owner: Hưng (@Nvhwng)
 
 ## ERD (core)
 
@@ -283,4 +232,65 @@ Owner: Hưng (@Nvhwng)
 |---|---|---|---|---|
 | **POST** | `/api/v1/callback/watch-event` | *Header:* `X-Signature: <hmac_sha256>`<br>`watch_session_id`, `event_id`, `watched_seconds`, `runtime_seconds`<br>*(note: `profile_id` is not passed directly — it is resolved server-side from `watch_session_id` via the `watch_session` table)* | **200** · watch event recorded (written to `watch_history` if progress ≥ 90%) | **401** invalid HMAC signature or expired timestamp<br>**404** watch_session_id not found<br>**422** duplicate callback event_id ignored *(BR1)* |
 
+# Walking skeleton
 
+**Route:** `GET /recommendations` · **Table:** `movie` (12 rows seeded from `data/movies.csv`)
+
+**How to know it worked:** `http://localhost:5000/recommendations` shows an HTML table listing 10 movies (title, genre, rating), read live from the SQLite database — not hardcoded in the route.
+
+![Walking skeleton running](images/walking-skeleton.png)
+
+**The query behind the page:**
+
+```sql
+SELECT id, title, genre, rating FROM movie ORDER BY id LIMIT 10;
+```
+
+No business rules (BR1–BR10) are applied yet at this stage — this route will be extended with filtering, personalization, and cold-start logic in Sprint 3/4, on top of this same working route.
+
+# Design decisions
+
+### ADR-1: SQLite instead of PostgreSQL/Redis for M2
+
+**Options:** SQLite (single file, no setup) · PostgreSQL via Docker · PostgreSQL installed directly on the machine.
+
+**Chose:** SQLite, with in-memory caching via a `Cache adapter`. The Container diagram above shows the target architecture; migration happens gradually from Sprint 3.
+
+**Why:** The instructor clones and runs the project via SETUP.md in 15 minutes. PostgreSQL + Redis require Docker or separate installation plus connection strings — the most likely point of failure in that first step. Schema is written in SQLAlchemy without Postgres-specific types (`citext`, native `uuid`), so switching DB later is just a connection-string change; `PRAGMA foreign_keys=ON` makes SQLite enforce FK/CASCADE the same way Postgres does. The mock Streaming Site runs as a route in the same app (`/mock-partner`), so no second container is needed yet.
+
+**What would change our mind:** Concurrent writes from multiple real users, or measuring `/recommendations` slower than our latency target without an out-of-process cache.
+
+---
+
+### ADR-2: One FastAPI app with internal modules, not microservices
+
+**Options:** One FastAPI app with Services as internal modules (function calls) · Each domain (Auth, Profile, Recommendation, Rating, Watch) as a separate microservice communicating over the network.
+
+**Chose:** Auth, Profile, Rating, Watch, and Recommendation as modules inside one process, under `app/<module>/`.
+
+**Why:** A 4-person team, one semester, no current need to scale any part independently. No network hop between modules means simpler debugging and testing within a single process, while the module boundaries stay clean enough to split out later if needed.
+
+**What would change our mind:** Model inference becoming heavy enough to need independent scaling or deployment — at that point, only the Recommendation Service would be split out.
+
+---
+
+### ADR-3: JWT for account identity + X-Profile-Id header for profile context
+
+**Options:** Re-issue a new profile-scoped JWT every time the user switches profiles · Use one JWT for account authentication plus a custom `X-Profile-Id` header to scope each request to the active profile.
+
+**Chose:** JWT for account identity, `X-Profile-Id` header for profile context.
+
+**Why:** SmartCine's 1 Account–N Profiles model (BR10) needs a lightweight way to know which profile a request is for, without the server overhead of re-issuing tokens on every profile switch. This also keeps concerns separate: the JWT proves who the account is, the header scopes which profile's data is being read or written.
+
+**What would change our mind:** Introducing per-profile security policies (e.g. a PIN check for a kids' profile on sensitive actions) — at that point, isolated per-profile session tokens would be worth revisiting.
+
+---
+
+### ADR-4: Inbound webhook instead of polling for partner watch events
+**Options:** SmartCine periodically polls the partner's API for playback progress · The partner pushes real-time watch events to SmartCine via an inbound webhook (`POST /api/v1/callback/watch-event`), authenticated with an HMAC-SHA256 signature.
+
+**Chose:** Inbound webhook with HMAC-SHA256 signature verification.
+
+**Why:** BR1 requires `watch_history` to update automatically from partner playback data. A webhook delivers updates in real time without the resource cost of repeated polling, and the HMAC signature confirms the request really came from the partner and wasn't tampered with.
+
+**What would change our mind:** Traffic spiking high enough that incoming webhook calls would need to be queued (e.g. via Kafka/RabbitMQ) before hitting the database, instead of being written directly.

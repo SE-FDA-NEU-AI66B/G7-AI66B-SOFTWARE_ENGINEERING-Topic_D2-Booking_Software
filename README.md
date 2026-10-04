@@ -10,7 +10,7 @@ SmartCine is an intelligent movie recommendation platform that solves the "what 
 | Nguyen Vinh Hung | Nvhwng | Member |
 | Be Thanh Dat | th3dummyking | Member |
 
-Scrum Master: @KatsuroNguyen (Sprint 1)
+Scrum Master: @KatsuroNguyen (Sprint 1), @th3dummyking (Sprint 2)
 Board: https://github.com/orgs/SE-FDA-NEU-AI66B/projects/9
 
 ## Setup
