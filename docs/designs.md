@@ -257,3 +257,106 @@ Owner: Hưng (@Nvhwng)
 | Method | Path | Input | Success | Errors |
 |---|---|---|---|---|
 | **POST** | `/api/v1/callback/watch-event` | *Header:* `X-Signature: <hmac_sha256>`<br>`watch_session_id`, `event_id`, `watched_seconds`, `runtime_seconds`<br>*(note: `profile_id` is not passed directly — it is resolved server-side from `watch_session_id` via the `watch_session` table)* | **200** · watch event recorded (written to `watch_history` if progress ≥ 90%) | **401** invalid HMAC signature or expired timestamp<br>**404** watch_session_id not found<br>**422** duplicate callback event_id ignored *(BR1)* |
+
+
+# Architectural Decision Records 
+
+### ADR-01: Authentication & User Profile Context Strategy
+
+* **Context & Problem Statement:**
+  The SmartCine system supports a **1 Account – N Profiles** domain model (one account contains multiple viewer profiles). The system requires a secure and lightweight mechanism to authenticate account identity while accurately preserving the active Profile context across all API requests (for recommendations, ratings, and watch history tracking).
+
+* **Options Considered:**
+  * **Option A:** Re-issuing a new profile-scoped JWT token every time the user switches profiles.
+  * **Option B:** Utilizing a JWT token for Account Authentication alongside a custom `X-Profile-Id` HTTP Header for Profile Context.
+
+* **Decision & Rationale:**
+  * **Selected Option: Option B.**
+  * **Rationale:**
+    * Eliminates server overhead caused by frequent token re-issuance whenever users switch profiles.
+    * Enforces a clear Separation of Concerns: JWT handles Account Identity, while the `X-Profile-Id` header explicitly scopes data operations to the target profile.
+
+* **Conditions for Change:**
+  * If granular security policies between profiles are introduced in the future (e.g., Kids profiles requiring a dedicated PIN verification per sensitive operation) $\rightarrow$ Re-evaluate issuing isolated per-profile session tokens.
+
+---
+
+### ADR-02: HTTP Status Code & Error Handling Standardization
+
+* **Context & Problem Statement:**
+  To maintain strict RESTful compliance and avoid the anti-pattern of "Always 200 OK" (returning status 200 even when error payloads exist in the body), the API architecture requires a standardized set of HTTP status codes across all endpoints.
+
+* **Options Considered:**
+  * **Option A:** Returning `200 OK` for all successful and failed requests, wrapping error details inside the JSON response body.
+  * **Option B:** Standardizing a clean status code matrix: `200 OK` and `201 Created` for success; strictly utilizing `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, and `422 Unprocessable Entity` for error handling.
+
+* **Decision & Rationale:**
+  * **Selected Option: Option B.**
+  * **Rationale:**
+    * Satisfies academic and industry requirements for RESTful maturity and compliance.
+    * Enables front-end clients to handle error states automatically via native HTTP response status codes without parsing JSON bodies first.
+    * Clearly delineates syntax errors (`400`), authentication/permission failures (`401/403`), missing resources (`404`), and business/validation constraint violations (`422`).
+
+* **Conditions for Change:**
+  * If the platform expands to handle heavy asynchronous background processes (e.g., batch data export or video encoding) $\rightarrow$ Incorporate `202 Accepted`.
+
+---
+
+### ADR-03: External Streaming Partner Integration via Webhook
+
+* **Context & Problem Statement:**
+  In accordance with Business Rule BR1, SmartCine must automatically record playback progress into `watch_history` whenever users watch movies on external partner streaming sites. The integration method must be real-time, secure, and non-blocking.
+
+* **Options Considered:**
+  * **Option A:** SmartCine periodically polls the partner’s API to fetch playback progress (Polling mechanism).
+  * **Option B:** The partner streams real-time watch events to SmartCine via an inbound Webhook (`POST /api/v1/callback/watch-event`) authenticated with an HMAC-SHA256 signature.
+
+* **Decision & Rationale:**
+  * **Selected Option: Option B.**
+  * **Rationale:**
+    * An event-driven webhook architecture delivers real-time updates while avoiding resource-heavy polling overhead on SmartCine servers.
+    * Incorporating an HMAC-SHA256 signature in the request headers guarantees payload integrity and authenticates that requests originate from legitimate partners.
+
+* **Conditions for Change:**
+  * If high-volume streaming traffic creates extreme event spikes $\rightarrow$ Ingest incoming webhook payloads directly into a Message Queue (e.g., Apache Kafka / RabbitMQ) prior to database persistence.
+
+
+---
+
+### ADR-04: API Pagination Strategy for High-Volume Resource Collections
+
+* **Context & Problem Statement:**
+  Endpoints retrieving movie catalogs (`GET /api/v1/movies`), search results, and movie reviews are expected to handle large datasets. Delivering unpaginated datasets causes severe network latency and database overhead. The platform requires a standardized pagination strategy for collection resources.
+
+* **Options Considered:**
+  * **Option A:** Offset-based Pagination (`page` and `limit` query parameters).
+  * **Option B:** Cursor-based / Keyset Pagination (`starting_after` or `cursor` token).
+
+* **Decision & Rationale:**
+  * **Selected Option: Option A (Offset-based Pagination).**
+  * **Rationale:**
+    * Offset-based pagination (`page` & `limit`) provides intuitive UI navigation (direct page jumping) for end-users browsing movie catalogs.
+    * Simplifies client-side integration while remaining fully compatible with the project's relational database schema (`OFFSET` and `LIMIT` queries).
+
+* **Conditions for Change:**
+  * If movie catalog datasets or review feeds scale to millions of records causing SQL `OFFSET` performance degradation $\rightarrow$ Migrate high-traffic endpoints to Cursor-based Pagination.
+
+---
+
+### ADR-05: Standardized Error Response Payload Structure (RFC 7807)
+
+* **Context & Problem Statement:**
+  When API requests fail (e.g., validation errors `422` or authorization failures `403`), front-end clients require a predictable, machine-readable JSON error structure to display user-friendly error messages without breaking UI state.
+
+* **Options Considered:**
+  * **Option A:** Returning plain-text error messages or unstructured key-value JSON objects.
+  * **Option B:** Adopting an RFC 7807-compliant JSON error structure featuring standard fields: `code`, `message`, `details` (field-level validation errors), and `timestamp`.
+
+* **Decision & Rationale:**
+  * **Selected Option: Option B.**
+  * **Rationale:**
+    * Establishes a uniform error format across all Microservices and Endpoints.
+    * Allows front-end forms to map validation errors (`details` array) directly to specific input fields automatically.
+
+* **Conditions for Change:**
+  * If third-party integrations require custom error serialization schemas $\rightarrow$ Introduce explicit API versioning or header-based content negotiation for error payloads.
