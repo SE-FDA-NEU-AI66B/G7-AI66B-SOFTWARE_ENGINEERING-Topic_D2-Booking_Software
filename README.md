@@ -12,6 +12,7 @@ SmartCine is an intelligent movie recommendation platform that solves the "what 
 
 Scrum Master: @KatsuroNguyen (Sprint 1), @th3dummyking (Sprint 2)
 Board: https://github.com/orgs/SE-FDA-NEU-AI66B/projects/9
+Setup Guide: https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/blob/main/docs/SETUP.md
 
 ## Setup
 
