@@ -106,27 +106,52 @@ Owner: Hưng (@Nvhwng)
      +-----------------------+
 ```
 
-## ADR
+## Design decisions
 
-### ADR-1: M2 dùng SQLite, không dùng PostgreSQL/Redis
+### ADR-1: SQLite instead of PostgreSQL/Redis for M2
 
-- **Context:** Giảng viên clone và chạy theo SETUP.md trong 15 phút. Postgres + Redis đòi Docker hoặc cài riêng, kèm connection string, và là điểm dễ hỏng nhất trong bước đầu.
-- **Decision:** Walking skeleton (M2) dùng **SQLite** (một file, không cài thêm) và cache trong bộ nhớ qua `Cache adapter`. Sơ đồ Container ở trên là kiến trúc đích, migrate dần từ Sprint 3.
-- **Consequences:**
-  - SETUP.md chỉ cần `pip install` + một lệnh chạy.
-  - Schema viết bằng SQLAlchemy, không dùng kiểu riêng của Postgres (`citext`, `uuid` gốc), nên đổi DB chỉ là đổi connection string. Bật `PRAGMA foreign_keys=ON` để FK và CASCADE chạy giống Postgres.
-  - Cache adapter là điểm duy nhất biết về cache, nên thay dict bằng Redis không đụng tới Service.
-- Mock Streaming Site chạy như một route trong cùng app (`/mock-partner`), không cần container thứ hai.
-  - Thứ phải test lại khi migrate: ghi đồng thời và cột `avg_rating` generated.
-- **What would change our mind:** Cần ghi đồng thời từ nhiều người dùng, hoặc đo được endpoint `/recommendations` chậm hơn mục tiêu latency khi không có cache ngoài tiến trình.
-**Options:** SQLite (file, không cài thêm) · PostgreSQL + Docker · PostgreSQL cài trực tiếp trên máy
-### ADR-2: Một app FastAPI, các Service là module
+**Options:** SQLite (single file, no setup) · PostgreSQL via Docker · PostgreSQL installed directly on the machine.
 
-- **Context:** Nhóm 4 người, một học kỳ, chưa có nhu cầu scale từng phần riêng.
-- **Decision:** Auth, Profile, Rating, Watch, Recommendation là module trong cùng một process. Ranh giới là function call và package `app/<module>/`.
-- **Consequences:** Không có network hop, debug và test trong một process. Ranh giới module vẫn rõ để tách sau.
-- **What would change our mind:** Model inference nặng đến mức cần scale hoặc deploy riêng, khi đó chỉ Recommendation Service tách ra.
-**Options:** Một app FastAPI với module nội bộ · Tách mỗi domain thành microservice riêng
+**Chose:** SQLite, with in-memory caching via a `Cache adapter`. The Container diagram above shows the target architecture; migration happens gradually from Sprint 3.
+
+**Why:** The instructor clones and runs the project via SETUP.md in 15 minutes. PostgreSQL + Redis require Docker or separate installation plus connection strings — the most likely point of failure in that first step. Schema is written in SQLAlchemy without Postgres-specific types (`citext`, native `uuid`), so switching DB later is just a connection-string change; `PRAGMA foreign_keys=ON` makes SQLite enforce FK/CASCADE the same way Postgres does. The mock Streaming Site runs as a route in the same app (`/mock-partner`), so no second container is needed yet.
+
+**What would change our mind:** Concurrent writes from multiple real users, or measuring `/recommendations` slower than our latency target without an out-of-process cache.
+
+---
+
+### ADR-2: One FastAPI app with internal modules, not microservices
+
+**Options:** One FastAPI app with Services as internal modules (function calls) · Each domain (Auth, Profile, Recommendation, Rating, Watch) as a separate microservice communicating over the network.
+
+**Chose:** Auth, Profile, Rating, Watch, and Recommendation as modules inside one process, under `app/<module>/`.
+
+**Why:** A 4-person team, one semester, no current need to scale any part independently. No network hop between modules means simpler debugging and testing within a single process, while the module boundaries stay clean enough to split out later if needed.
+
+**What would change our mind:** Model inference becoming heavy enough to need independent scaling or deployment — at that point, only the Recommendation Service would be split out.
+
+---
+
+### ADR-3: JWT for account identity + X-Profile-Id header for profile context
+
+**Options:** Re-issue a new profile-scoped JWT every time the user switches profiles · Use one JWT for account authentication plus a custom `X-Profile-Id` header to scope each request to the active profile.
+
+**Chose:** JWT for account identity, `X-Profile-Id` header for profile context.
+
+**Why:** SmartCine's 1 Account–N Profiles model (BR10) needs a lightweight way to know which profile a request is for, without the server overhead of re-issuing tokens on every profile switch. This also keeps concerns separate: the JWT proves who the account is, the header scopes which profile's data is being read or written.
+
+**What would change our mind:** Introducing per-profile security policies (e.g. a PIN check for a kids' profile on sensitive actions) — at that point, isolated per-profile session tokens would be worth revisiting.
+
+---
+
+### ADR-4: Inbound webhook instead of polling for partner watch events
+**Options:** SmartCine periodically polls the partner's API for playback progress · The partner pushes real-time watch events to SmartCine via an inbound webhook (`POST /api/v1/callback/watch-event`), authenticated with an HMAC-SHA256 signature.
+
+**Chose:** Inbound webhook with HMAC-SHA256 signature verification.
+
+**Why:** BR1 requires `watch_history` to update automatically from partner playback data. A webhook delivers updates in real time without the resource cost of repeated polling, and the HMAC signature confirms the request really came from the partner and wasn't tampered with.
+
+**What would change our mind:** Traffic spiking high enough that incoming webhook calls would need to be queued (e.g. via Kafka/RabbitMQ) before hitting the database, instead of being written directly.
 # Data model
 
 Owner: Hưng (@Nvhwng)
@@ -237,3 +262,25 @@ Owner: Hưng (@Nvhwng)
 | US08 | — (code) |
 | US09 | rating, watch_history |
 | US10 | account, profile |
+
+# API design
+
+#### Core RESTful APIs (P0 User Stories)
+
+| Method | Path | Input | Success | Errors |
+|---|---|---|---|---|
+| **POST** | `/api/v1/auth/login` | `email`, `password` | **200** · `access_token` (JWT), list of profiles | **400** missing required credentials<br>**401** invalid email or password *(US01, US10)* |
+| **GET** | `/api/v1/profiles` | *Header:* `Authorization: Bearer <access_token>` | **200** · list of profiles belonging to the account (`id`, `display_name`, `max_age_rating`) | **401** unauthorized account token *(US10)* |
+| **POST** | `/api/v1/profiles/select` | *Header:* `Authorization: Bearer <access_token>`<br>`profile_id` | **200** · `active_profile_id`, `redirectTo: "/recommendations"` | **401** unauthorized account token<br>**404** profile not found or does not belong to account *(US10, BR10)* |
+| **GET** | `/api/v1/recommendations/setup/genres` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>` | **200** · list of available genres/themes (e.g., Action, Horror) | **401** missing or invalid JWT<br>**403** missing or invalid `X-Profile-Id` header *(US06)* |
+| **GET** | `/api/v1/recommendations` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>`<br>*Query:* `genre_id` *(optional)*, `companion_profile_id` *(optional — triggers the ratio-merge in US05; must belong to the same account as BR10 requires)* | **200** · list of 10 unique movies (personalized, cold-start, or merged if `companion_profile_id` is present) | **401** unauthorized JWT<br>**403** missing active profile header<br>**404** `companion_profile_id` not found or belongs to another account (BR10)<br>**422** invalid `genre_id` query parameter *(US01, US03, US05; BR1–BR10)* |
+| **POST** | `/api/v1/ratings` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>`<br>`movie_id`, `score` (1-10) | **201** · rating created or updated (upsert) | **400** score outside 1-10 range<br>**401** unauthorized<br>**404** movie_id not found *(US02)* |
+| **POST** | `/api/v1/movies/:id/watch` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>` | **200** · movie marked as watched manually in `watch_history` | **401** unauthorized<br>**404** movie ID not found in database *(US04, BR1)* |
+
+#### Partner Callback API (External Streaming Integration)
+
+| Method | Path | Input | Success | Errors |
+|---|---|---|---|---|
+| **POST** | `/api/v1/callback/watch-event` | *Header:* `X-Signature: <hmac_sha256>`<br>`watch_session_id`, `event_id`, `watched_seconds`, `runtime_seconds`<br>*(note: `profile_id` is not passed directly — it is resolved server-side from `watch_session_id` via the `watch_session` table)* | **200** · watch event recorded (written to `watch_history` if progress ≥ 90%) | **401** invalid HMAC signature or expired timestamp<br>**404** watch_session_id not found<br>**422** duplicate callback event_id ignored *(BR1)* |
+
+
