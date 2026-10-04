@@ -62,23 +62,23 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 
 ## 4. User stories
 
-### US01 — Recommendations without rating anything
+### US01 — Cold-start recommendations for new or low-data users
 
 **Priority:** P0  
 **Points:** 3  
 **Screen:** `/recommendations`
 
-**As Duyen, I want to receive movie recommendations without rating anything first so that I get value from the app immediately.**
+**As Duyen, I want to receive relevant movie recommendations even before I've rated enough movies, so that I get value from the app immediately.**
 
 **Acceptance criteria:**
-- Given Duyen has **0 ratings**, when she opens the recommendations page, then the system displays a trending/critically-acclaimed list *(BR6)*.
-- Given the list loads, when displayed, then it contains exactly **10 movies** *(BR3)*.
+- Given a user has fewer than 5 rated or watched movies (0 included), when they request recommendations, then the system returns a trending/critically acclaimed list instead of a personalized one (BR5, BR6) 
+- Given the cold-start list is generated, when displayed, then it contains exactly 10 movies, each with at least 100 ratings (BR3, BR8).
 
 **Tasks:**
-- Build cold-start query (trending/critically acclaimed, top 10) - @KatsuroHuy
-- Build `/recommendations` page UI for 0-rating state - @th3dummyking
-
-- Tests: 0-rating user gets exactly 10 trending movies - @PhuongLinhtla
+- Build rating-count check (detect <5 ratings/watched movies) - @KatsuroHuy
+- Build trending/critically-acclaimed query (min 100 ratings, BR8)  - @th3dummyking
+- Build /recommendations page UI for the cold-start result state - @Nvhwng
+- Tests: Tests: user with <5 ratings gets exactly 10 trending movies, each with ≥100 ratings (BR3, BR5, BR6, BR8) - @PhuongLinhtla
 
 ---
 
@@ -139,22 +139,25 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 
 ---
 
-### US05 — Recommendations for watching with others
+### US05 — Recommendations for watching with a companion profile
 
 **Priority:** P1  
 **Points:** 5  
-**Screen:** `/recommendations/setup`
+**Screen:** `/recommendations/setup`, `/profiles`
 
-**As Trang, I want to specify who I'm watching with so that the system suggests movies that balance my preferences with theirs.**
+**As Duyen, I want to pick a second profile from my account when watching together, so that the recommendations reflect both our tastes.**
 
 **Acceptance criteria:**
-- Given Trang selects "watching with a friend" and adds their profile, when recommendations are generated, then the list reflects **both users' rating histories**, not Trang's alone.
-- Given Trang watches alone (no companion selected), when recommendations are generated, then the list uses **only her own data**.
+- Given Duyen's account has 2 profiles (Duyen: 20 rated movies Housemate: 5 rated movies), when both profiles are selected for a joint session, then the system builds each profile's personalized top-list independently, then merges them proportional to rating count (20:5 = 4:1) — 8 movies from Duyen's list, 2 from Housemate's list
+- Given a movie appears in both profiles' individual top-lists, when merging, then it is deduplicated and placed ahead of movies unique to only one profile
+- Given only one profile is selected, when recommendations are
+ generated, then the list uses only that profile's data (unchanged from single-profile behavior)
 
 **Tasks:**
-- Build companion-selection UI on `/recommendations/setup` - @th3dummyking
-- Build merged-preference query (2 users' histories) - @th3dummyking
-- Tests: solo vs. companion mode produce different result sets - @PhuongLinhtla
+- Build /profiles screen UI for selecting one or more profiles - @th3dummyking
+- Build endpoint to fetch each selected profile's personalized top-list independently - @th3dummyking
+- Implement proportional merge logic (split by rating-count ratio, e.g. 20:5 → 8:2; dedupe overlapping movies) - @KatsuroHuy
+- Tests: Tests: verify merge ratio with different profile sizes, dedupe behavior, and single-profile fallback (no merge when only 1 profile selected) - @PhuongLinhtla
 
 ---
 
@@ -234,21 +237,22 @@ SmartCine is an intelligent movie recommendation platform for film enthusiasts w
 
 ---
 
-### US10 — Cold-start recommendations for low-data users
+### US10 — Select a profile before watching
 
 **Priority:** P0  
-**Points:** 5  
-**Screen:** `/recommendations`
+**Points:** 2  
+**Screen:** `/profiles`
 
-**As a user with very few ratings, I want to see trending/critically acclaimed movies instead of a poor personalized guess so that I still get a useful list early on.**
+**As a user, I want to select which profile is watching before getting recommendations, so that each person's recommendations and ratings stay separate from others sharing the same account.**
 
 **Acceptance criteria:**
-- Given a user has rated only **3 movies**, when they request recommendations, then the system returns the cold-start list, not a personalized one *(BR5/BR6)*.
-- Given a cold-start movie is selected, when checked against BR8, then it must have **at least 100 ratings** to qualify for that pool.
+- Given an account has 2 profiles, when the user logs in, then they must select a profile at /profiles before reaching /recommendations/setup
+- Given a profile is selected, when recommendations are generated or rating history is viewed, then only that profile's own data is used, never mixed with another profile on the same account (BR10)
 
 **Tasks:**
-- Build <5-ratings detection + cold-start fallback trigger - @th3dummyking
-- Add min-100-ratings filter for cold-start pool - @KatsuroHuy
+- Build /profiles screen UI (list profiles under the account, pick one) - @th3dummyking
+- Enforce routing guard: block access to /recommendations/setup until a profile is selected - @KatsuroHuy
+- Build backend logic to scope all subsequent requests (recommendations, ratings) to the selected profile only - @PhuongLinhtla
 - Tests: 3-rating user gets cold-start list, not personalized - @Nvhwng
 
 ## 5. Business rules
@@ -306,6 +310,13 @@ When multiple movies have an identical predicted score, they must be ordered by 
 **Worked example:**
 Movie A and Movie B both score 8.5 predicted match. Movie A has 1,200 ratings, Movie B has 900. Movie A appears first.
 
+### BR10 — Account and Profiles
+One account may contain multiple profiles (e.g. family members or roommates). Each profile maintains its own independent rating history and preferences. Recommendations are always generated per profile.
+
+**Worked example:** 
+The "Duyen" account has 2 profiles — "Duyen" (20 rated movies) and "Housemate" (5 rated movies). Logging into the account does not select a profile; the user must pick a profile at /profiles before reaching recommendations.
+
+
 ## 6. Screens and flow
 
 
@@ -318,7 +329,7 @@ Movie A and Movie B both score 8.5 predicted match. Movie A has 1,200 ratings, M
 | `/recommendations` | Show personalized or cold-start movie list | U | P0 |
 | `/movie/:id` | Movie detail — view info, mark as watched, submit a rating | U | P0 |
 | `/profile/ratings` | View and manage movies you've rated | U | P1 |
-
+| `/profiles` | Select which profile is watching (like "Who's watching?") | U | P0 |
 
 **Flow diagram:**
 
@@ -337,6 +348,12 @@ Movie A and Movie B both score 8.5 predicted match. Movie A has 1,200 ratings, M
                      +------------------+
                               |
                               | success
+                              v
+                     +------------------+
+                     |    /profiles     |
+                     +------------------+
+                              |
+                              | get recommendations
                               v
                +-------------------------------+
                |   /recommendations/setup      |
