@@ -326,13 +326,15 @@ Free streaming sites do not offer public APIs or partnerships, so a real integra
 2. **Build a mock** for the demo: a small fake endpoint that plays the role of the external site and sends a callback to SmartCine, which demonstrates that the architecture works end to end. No real site is called.
 
 ### Contract
+
 The exact fields below are our proposed design and can be adjusted during implementation.
 
 - **Use case:** *Receive watch-progress callback* (actor: External Streaming Site; includes *Update watched history*).
-- **Endpoint:** `POST /api/watch-events` is called by the external site (or by the mock).
-- **Payload (example):** `{ "profileId": "...", "movieId": "...", "watchedSeconds": 5400, "totalSeconds": 7200, "completed": false }`
-- **Behaviour:** if the data shows the movie has been watched (for example, the completion threshold is reached), the movie is added to that profile's watched history, as if the user had pressed "Mark as watched".
-
+- **Endpoint:** `POST /api/v1/callback/watch-event` is called by the external site (or by the mock).
+- **Authentication:** request must include header `X-Signature: <hmac_sha256>`. SmartCine verifies the signature before processing (ADR-4); invalid or expired signatures return `401`.
+- **Payload (example):** `{ "watch_session_id": "...", "event_id": "...", "watched_seconds": 5400, "runtime_seconds": 7200 }`
+- **Note:** `profile_id` is not sent directly — it is resolved server-side from `watch_session_id` via the `watch_session` table.
+- **Behaviour:** if `watched_seconds / runtime_seconds` reaches the completion threshold (≥90%), the movie is added to that profile's watched history (`watch_history`), as if the user had pressed "Mark as watched" (BR1). Duplicate `event_id` values for the same session are ignored (`422`).
 ---
 
 ## 2. User Story Change: US01 Merged with the Old US10
