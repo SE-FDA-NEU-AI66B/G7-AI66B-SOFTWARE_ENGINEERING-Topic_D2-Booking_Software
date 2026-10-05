@@ -69,3 +69,9 @@ Goal: Agree on the product vision, personas, scenarios, business rules, and scre
 Committed 0 · Completed 0 · Velocity: not applicable (requirements sprint)
 Not finished: none.
 SM Sprint 2: @th3dummyking
+
+## Sprint 2 (weeks 7–8)
+Goal: architecture, data model, API design and ADRs are documented, and one real route (walking skeleton) runs end-to-end against a seeded database.
+Committed 0 · Completed 0 · Velocity: not applicable (design/skeleton sprint)
+Not finished: none.
+SM Sprint 3: @Nvhwng
