@@ -6,6 +6,7 @@ skeleton (`GET /recommendations`).
 ## 1. Prerequisites
 
 - Python 3.11 or newer
+- Node.js 20 or newer (includes npm)
 - pip (comes with Python)
 - Git
 
@@ -29,6 +30,14 @@ cd <repo>
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+Build the frontend (both systems):
+```bash
+cd frontend
+npm install
+npm run build
+cd ..
 ```
 
 ## 3. Configuration
@@ -59,7 +68,8 @@ Seeded 12 movies from data/movies.csv into data/smartcine.db
 python app.py
 ```
 
-Open **http://localhost:5000/recommendations** in your browser.
+Open **http://localhost:5000/** in your browser.
+The raw API is at http://localhost:5000/api/v1/recommendations (JSON).
 
 **It worked if:** you see an HTML table with 10 rows, each showing a
 movie ID, title, genre, and rating (e.g. "Oldboy", "Thriller", 8.4).
@@ -71,6 +81,8 @@ movie ID, title, genre, and rating (e.g. "Oldboy", "Thriller", 8.4).
 | `ModuleNotFoundError: No module named 'flask'` | The virtual environment isn't active. Re-run the `activate` command from step 2, then `pip install -r requirements.txt` again. |
 | `OSError: [Errno 98] Address already in use` | Another process is using port 5000. Set `PORT=5001` in `.env`, then re-run `python app.py`. |
 | `FileNotFoundError: data/movies.csv` | You're running the command from the wrong folder. Make sure you're in the project root (the folder containing `app.py`) before running `python init_db.py`. |
+| `npm: command not found` | Install Node.js 20+ from nodejs.org, reopen the terminal, then repeat the frontend build step. |
+| Page shows `{"detail":"Not Found"}` | `frontend/dist` doesn't exist yet. Run `npm run build` inside `frontend/`, then restart `python app.py`. |
 
 ## 7. Tested by
 
