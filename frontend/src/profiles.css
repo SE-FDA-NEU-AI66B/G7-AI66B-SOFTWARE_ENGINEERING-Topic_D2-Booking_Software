@@ -1,0 +1,101 @@
+.profiles-page,
+.setup-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px 16px;
+}
+
+.profiles-page h1,
+.setup-page h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 400;
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0;
+  text-align: center;
+}
+
+.profile-grid {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  justify-content: center;
+}
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+.profile-card:hover:not(:disabled) .avatar { outline: 3px solid var(--text); }
+.profile-card:hover:not(:disabled) { color: var(--text); }
+.profile-card:disabled { cursor: progress; opacity: 0.7; }
+.profile-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; border-radius: 8px; }
+
+.avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 48px;
+  font-weight: 700;
+  color: #000;
+}
+.avatar.tiny { width: 28px; height: 28px; font-size: 14px; border-radius: 4px; }
+
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--gold);
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.primary-link {
+  background: var(--gold);
+  color: #000;
+  padding: 11px 22px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.logo.small { font-size: 20px; padding: 2px 10px; }
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.app-header nav { display: flex; align-items: center; gap: 14px; font-size: 14px; }
+.app-header a { color: var(--gold); }
+.app-header button {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.app-header button:hover { border-color: var(--muted); }

@@ -1,28 +1,39 @@
 import { useEffect, useState } from "react";
 
-export default function Recommendations() {
+export default function Recommendations({ token, profileId }) {
   const [state, setState] = useState({ status: "loading", movies: [] });
+  const [attempt, setAttempt] = useState(0);
 
-  const load = () => {
-    setState({ status: "loading", movies: [] });
-    fetch("/api/v1/recommendations")
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/v1/recommendations", {
+      headers: { Authorization: `Bearer ${token}`, "X-Profile-Id": String(profileId) },
+    })
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json();
       })
-      .then((movies) =>
-        setState({ status: movies.length ? "data" : "empty", movies })
-      )
-      .catch(() => setState({ status: "error", movies: [] }));
-  };
+      .then((movies) => {
+        if (!cancelled) setState({ status: movies.length ? "data" : "empty", movies });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "error", movies: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt, token, profileId]);
 
-  useEffect(load, []);
+  function retry() {
+    setState({ status: "loading", movies: [] });
+    setAttempt((n) => n + 1);
+  }
 
   if (state.status === "loading") return <p>Loading recommendations...</p>;
   if (state.status === "error")
     return (
       <p>
-        We can't reach the server. <button onClick={load}>Try again</button>
+        We can't reach the server. <button onClick={retry}>Try again</button>
       </p>
     );
   if (state.status === "empty") return <p>No recommendations yet.</p>;

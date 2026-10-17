@@ -8,7 +8,7 @@ import sqlite3
 from datetime import UTC, datetime, timedelta
 
 import jwt
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -81,11 +81,11 @@ def ensure_schema_and_seed(conn: sqlite3.Connection) -> None:
     )
     conn.commit()
 
+def _jwt_secret() -> str:
+    return os.environ.get("JWT_SECRET", "dev-only-secret-change-me-in-env-0123456789")
 
 def create_access_token(account_id: int) -> str:
-    secret = os.environ.get(
-        "JWT_SECRET", "dev-only-secret-change-me-in-env-0123456789"
-    )
+    secret = _jwt_secret()
     now = datetime.now(UTC)
     payload = {
         "sub": str(account_id),
@@ -127,3 +127,44 @@ def login(body: LoginRequest):
         "token_type": "bearer",
         "profiles": [dict(p) for p in profiles],
     }
+
+def get_current_account(authorization: str | None = Header(default=None)) -> int:
+    """Dependency: read the Bearer token and return the account id (401 if invalid)."""
+    scheme, _, token = (authorization or "").partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=401, detail="Sign in to continue.")
+    try:
+        payload = jwt.decode(token, _jwt_secret(), algorithms=["HS256"])
+        return int(payload["sub"])
+    except (jwt.InvalidTokenError, KeyError, ValueError):
+        raise HTTPException(
+            status_code=401, detail="Your session has expired. Sign in again."
+        ) from None
+
+
+def profile_belongs_to_account(
+    conn: sqlite3.Connection, account_id: int, profile_id: int
+) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM profile WHERE id = ? AND account_id = ?",
+        (profile_id, account_id),
+    ).fetchone()
+    return row is not None
+
+
+def get_current_profile(
+    account_id: int = Depends(get_current_account),
+    x_profile_id: str | None = Header(default=None),
+) -> int:
+    """Dependency (ADR-3): the profile in X-Profile-Id must belong to the token's account (BR10)."""
+    if not x_profile_id or not x_profile_id.isdigit():
+        raise HTTPException(status_code=400, detail="Select a profile first.")
+    conn = get_conn()
+    try:
+        if not profile_belongs_to_account(conn, account_id, int(x_profile_id)):
+            raise HTTPException(
+                status_code=404, detail="Profile not found in this account."
+            )
+    finally:
+        conn.close()
+    return int(x_profile_id)
