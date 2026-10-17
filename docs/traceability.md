@@ -8,12 +8,12 @@ update this file should not be approved.
 | Route | Purpose | Access | Priority | Feature | Story issue | PR | Status |
 |---|---|---|---|---|---|---|---|
 | `/` | Landing page | G | P0 | F1 | — | TBD | Not started |
-| `/login` | Sign in / sign up | G | P0 | F1 | — | TBD | Not started |
+| `/login` | Sign in with email and password | G | P0 | F1 | — | # | In progress |
 | `/recommendations/setup` | Ask theme/topic and companion before generating list | U | P0 | F4 | #27, #28 | TBD | Not started |
 | `/recommendations` | Show personalized or cold-start movie list | U | P0 | F2 | #23, #25, #29, #30, #31, #32 | TBD | Not started |
 | `/movie/:id` | Movie detail — view info, mark as watched, rate | U | P0 | F3 | #24, #26 | TBD | Not started |
 | `/profile/ratings` | View and manage movies you've rated | U | P1 | F3 | — | TBD | Not started |
-| `/profiles` | Select which profile is watching | U | P0 | F1 | — | TBD | Not started |
+| `/profiles` | Select which profile is watching | U | P0 | F1 | #32 | #<số PR> | In progress |
 
 **Access codes:** G = guest (not logged in) · U = authenticated user · A = admin
 
@@ -34,4 +34,4 @@ Numbered, so issues and tests can cite them.
 | BR7 | No duplicate movies in one result list | /recommendations | TBD |
 | BR8 | Min 100 ratings to qualify for cold-start pool | /recommendations | TBD |
 | BR9 | Tie-break by rating count then release year | /recommendations | TBD |
-| BR10 | A profile belongs to exactly one account; a joint session can only merge profiles from the same account | /profiles | TBD |
+| BR10 | ... | /profiles, `get_current_profile` in `auth.py` | `tests/test_profiles.py::test_select_profile_of_another_account_returns_404`, `::test_scoped_endpoint_rejects_profile_of_another_account` |

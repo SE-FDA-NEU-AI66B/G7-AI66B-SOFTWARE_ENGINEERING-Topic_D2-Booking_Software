@@ -1,47 +1,74 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import Header from "./Header.jsx";
+import Login from "./Login.jsx";
+import Profiles from "./Profiles.jsx";
+import Recommendations from "./Recommendations.jsx";
+import RecommendationSetup from "./RecommendationSetup.jsx";
+import { loadSession, storeSession } from "./session.js";
 
-export default function App() {
-  const [state, setState] = useState({ status: "loading", movies: [] });
+function App() {
+  const [session, setSession] = useState(loadSession);
 
-  const load = () => {
-    setState({ status: "loading", movies: [] });
-    fetch("/api/v1/recommendations")
-      .then((r) => {
-        if (!r.ok) throw new Error();
-        return r.json();
-      })
-      .then((movies) =>
-        setState({ status: movies.length ? "data" : "empty", movies })
-      )
-      .catch(() => setState({ status: "error", movies: [] }));
-  };
+  function update(next) {
+    storeSession(next);
+    setSession(next);
+  }
 
-  useEffect(load, []);
+  const signOut = useCallback(() => {
+    storeSession(null);
+    setSession(null);
+  }, []);
+  const handleLoggedIn = (data) => update({ ...data, profile: null });
+  const handleSelect = (profile) => update({ ...session, profile });
 
-  if (state.status === "loading") return <p>Loading recommendations...</p>;
-  if (state.status === "error")
+  // Guards: no session -> /login; session without a profile -> /profiles.
+  function requireProfile(page) {
+    if (!session) return <Navigate to="/login" replace />;
+    if (!session.profile) return <Navigate to="/profiles" replace />;
     return (
-      <p>
-        We can't reach the server. <button onClick={load}>Try again</button>
-      </p>
+      <>
+        <Header session={session} onSignOut={signOut} />
+        {page}
+      </>
     );
-  if (state.status === "empty") return <p>No recommendations yet.</p>;
+  }
 
   return (
-    <div>
-      <h1>Recommendations</h1>
-      <table border="1">
-        <thead>
-          <tr><th>ID</th><th>Title</th><th>Genre</th><th>Rating</th></tr>
-        </thead>
-        <tbody>
-          {state.movies.map((m) => (
-            <tr key={m.id}>
-              <td>{m.id}</td><td>{m.title}</td><td>{m.genre}</td><td>{m.rating}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <HashRouter>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            session ? <Navigate to="/profiles" replace /> : <Login onLoggedIn={handleLoggedIn} />
+          }
+        />
+        <Route
+          path="/profiles"
+          element={
+            session ? (
+              <Profiles session={session} onSelect={handleSelect} onSignOut={signOut} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/recommendations/setup"
+          element={requireProfile(<RecommendationSetup />)}
+        />
+        <Route
+          path="/recommendations"
+          element={requireProfile(
+            session?.profile ? (
+              <Recommendations token={session.access_token} profileId={session.profile.id} />
+            ) : null
+          )}
+        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </HashRouter>
   );
 }
+
+export default App;

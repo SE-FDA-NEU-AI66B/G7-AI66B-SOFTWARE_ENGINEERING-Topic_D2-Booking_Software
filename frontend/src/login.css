@@ -1,0 +1,121 @@
+:root {
+  --bg: #121212;
+  --card: #1f1f1f;
+  --line: #3a3a3a;
+  --text: #f2f2f2;
+  --muted: #a8a8a8;
+  --gold: #f5c518;
+  --gold-hover: #e2b616;
+  --danger: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px 16px;
+}
+
+.logo {
+  background: var(--gold);
+  color: #000;
+  font-weight: 900;
+  font-size: 32px;
+  letter-spacing: -0.5px;
+  padding: 4px 14px;
+  border-radius: 4px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.film-strip {
+  height: 14px;
+  background:
+    radial-gradient(circle at 50% 50%, var(--bg) 3px, transparent 3.5px) 0 0 / 18px 14px repeat-x,
+    #2a2a2a;
+}
+
+.login-body { padding: 24px; }
+
+h1 { margin: 0 0 16px; font-size: 28px; font-weight: 400; }
+
+label { display: block; margin: 14px 0 6px; font-size: 14px; font-weight: 700; }
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 16px;
+  color: var(--text);
+  background: #121212;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.password-row { position: relative; }
+.password-row input { padding-right: 64px; }
+
+.toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 8px;
+}
+.toggle:hover { color: var(--text); }
+
+.primary {
+  width: 100%;
+  margin-top: 22px;
+  padding: 11px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+  background: var(--gold);
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.primary:hover:not(:disabled) { background: var(--gold-hover); }
+.primary:disabled { opacity: 0.6; cursor: progress; }
+
+.login-error {
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-left-width: 4px;
+  border-radius: 4px;
+}
+
+.hint { color: var(--muted); font-size: 13px; margin: 0; text-align: center; }

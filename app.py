@@ -1,28 +1,29 @@
 import os
-import sqlite3
 
-from fastapi import FastAPI
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from auth import get_conn, get_current_profile
+from auth import router as auth_router
+from profiles import router as profiles_router
+
+load_dotenv()  
+
 app = FastAPI(title="SmartCine")
-DB_PATH = os.environ.get("DB_PATH", "data/smartcine.db")
+app.include_router(auth_router)
+app.include_router(profiles_router)
 
 
 @app.get("/api/v1/recommendations")
-def recommendations():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    rows = conn.execute(
-        "SELECT id, title, genre, rating FROM movie ORDER BY id LIMIT 10"
-    ).fetchall()
-    conn.close()
-
-    
-    html = "<h1>Recommendations (walking skeleton)</h1><table border='1'>"
-    html += "<tr><th>ID</th><th>Title</th><th>Genre</th><th>Rating</th></tr>"
-    for row in rows:
-        html += f"<tr><td>{row[0]}</td><td>{row[1]}</td><td>{row[2]}</td><td>{row[3]}</td></tr>"
-    html += "</table>"
+def recommendations(_profile_id: int = Depends(get_current_profile)):
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT id, title, genre, rating FROM movie ORDER BY id LIMIT 10"
+        ).fetchall()
+    finally:
+        conn.close()
     return [dict(r) for r in rows]
 
 # Serve the built React app. Must stay AFTER all API routes.
