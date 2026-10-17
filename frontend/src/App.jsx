@@ -1,47 +1,44 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Login from "./Login.jsx";
+import Recommendations from "./Recommendations.jsx";
 
-export default function App() {
-  const [state, setState] = useState({ status: "loading", movies: [] });
+function readSession() {
+  try {
+    return JSON.parse(sessionStorage.getItem("smartcine.session"));
+  } catch {
+    return null;
+  }
+}
 
-  const load = () => {
-    setState({ status: "loading", movies: [] });
-    fetch("/api/v1/recommendations")
-      .then((r) => {
-        if (!r.ok) throw new Error();
-        return r.json();
-      })
-      .then((movies) =>
-        setState({ status: movies.length ? "data" : "empty", movies })
-      )
-      .catch(() => setState({ status: "error", movies: [] }));
-  };
+function App() {
+  const [session, setSession] = useState(readSession);
 
-  useEffect(load, []);
+  function handleLoggedIn(data) {
+    try {
+      sessionStorage.setItem("smartcine.session", JSON.stringify(data));
+    } catch {
+      /* storage unavailable: session lasts until reload */
+    }
+    setSession(data);
+  }
 
-  if (state.status === "loading") return <p>Loading recommendations...</p>;
-  if (state.status === "error")
-    return (
-      <p>
-        We can't reach the server. <button onClick={load}>Try again</button>
-      </p>
-    );
-  if (state.status === "empty") return <p>No recommendations yet.</p>;
+  function signOut() {
+    try {
+      sessionStorage.removeItem("smartcine.session");
+    } catch {
+      /* ignore */
+    }
+    setSession(null);
+  }
+
+  if (!session) return <Login onLoggedIn={handleLoggedIn} />;
 
   return (
     <div>
-      <h1>Recommendations</h1>
-      <table border="1">
-        <thead>
-          <tr><th>ID</th><th>Title</th><th>Genre</th><th>Rating</th></tr>
-        </thead>
-        <tbody>
-          {state.movies.map((m) => (
-            <tr key={m.id}>
-              <td>{m.id}</td><td>{m.title}</td><td>{m.genre}</td><td>{m.rating}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <button onClick={signOut}>Sign out</button>
+      <Recommendations />
     </div>
   );
 }
+
+export default App;

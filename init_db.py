@@ -2,6 +2,8 @@ import csv
 import os
 import sqlite3
 
+from auth import ensure_schema_and_seed
+
 DB_PATH = os.environ.get("DB_PATH", "data/smartcine.db")
 CSV_PATH = os.environ.get("MOVIES_CSV", "data/movies.csv")
 
@@ -32,6 +34,8 @@ with open(CSV_PATH, newline="", encoding="utf-8") as f:
 cursor.executemany(
     "INSERT INTO movie (id, title, genre, rating) VALUES (?, ?, ?, ?)", movies
 )
+
+ensure_schema_and_seed(conn)
 
 conn.commit()
 conn.close()

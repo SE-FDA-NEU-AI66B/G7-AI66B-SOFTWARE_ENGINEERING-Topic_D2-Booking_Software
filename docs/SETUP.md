@@ -87,3 +87,10 @@ movie ID, title, genre, and rating (e.g. "Oldboy", "Thriller", 8.4).
 ## 7. Tested by
 
 - @th3dummyking (Team 07) on a fresh Windows machine, 4/10/2026, took 15 minutes.
+
+### Test account
+| Email | Password | Profiles |
+|---|---|---|
+| demo@smartcine.test | Demo@1234 | Alex, Sam |
+
+Created by `python init_db.py`. For local testing only.

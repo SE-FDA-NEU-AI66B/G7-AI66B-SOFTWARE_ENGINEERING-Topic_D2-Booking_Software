@@ -4,7 +4,10 @@ import sqlite3
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from auth import router as auth_router
+
 app = FastAPI(title="SmartCine")
+app.include_router(auth_router)
 DB_PATH = os.environ.get("DB_PATH", "data/smartcine.db")
 
 
