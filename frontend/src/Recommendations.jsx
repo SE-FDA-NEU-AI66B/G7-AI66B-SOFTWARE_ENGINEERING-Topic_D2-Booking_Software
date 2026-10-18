@@ -1,27 +1,48 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 export default function Recommendations({ token, profileId }) {
-  const [state, setState] = useState({ status: "loading", movies: [] });
+  const [state, setState] = useState({ status: "loading", movies: [], mode: null });
   const [attempt, setAttempt] = useState(0);
   const [params] = useSearchParams();
   const genreId = params.get("genre_id");
 
   useEffect(() => {
-    if (!genreId) return;
     let cancelled = false;
-    fetch(`/api/v1/recommendations?genre_id=${encodeURIComponent(genreId)}`, {
+    const query = genreId ? `?genre_id=${encodeURIComponent(genreId)}` : "";
+    fetch(`/api/v1/recommendations${query}`, {
       headers: { Authorization: `Bearer ${token}`, "X-Profile-Id": String(profileId) },
     })
       .then((r) => {
-        if (!r.ok) throw new Error();
-        return r.json();
+        if (!r.ok) {
+          if (r.status === 404)
+            return r.json().then((body) => {
+              if (String(body.detail).includes("qualify for cold-start")) {
+                return { noCandidates: true };
+              }
+              throw new Error();
+            });
+          throw new Error();
+        }
+        return r.json().then((movies) => ({
+          movies,
+          mode: r.headers.get("X-Recommendation-Mode"),
+        }));
       })
-      .then((movies) => {
-        if (!cancelled) setState({ status: movies.length ? "data" : "empty", movies });
+      .then((result) => {
+        if (cancelled) return;
+        if (result.noCandidates) {
+          setState({ status: "no-candidates", movies: [], mode: null });
+        } else {
+          setState({
+            status: result.movies.length ? "data" : "empty",
+            movies: result.movies,
+            mode: result.mode,
+          });
+        }
       })
       .catch(() => {
-        if (!cancelled) setState({ status: "error", movies: [] });
+        if (!cancelled) setState({ status: "error", movies: [], mode: null });
       });
     return () => {
       cancelled = true;
@@ -33,7 +54,6 @@ export default function Recommendations({ token, profileId }) {
     setAttempt((n) => n + 1);
   }
 
-  if (!genreId) return <Navigate to="/recommendations/setup" replace />;
   if (state.status === "loading") return <p>Loading recommendations...</p>;
   if (state.status === "error")
     return (
@@ -48,19 +68,30 @@ export default function Recommendations({ token, profileId }) {
         <Link to="/recommendations/setup">Choose another genre</Link>
       </p>
     );
+  if (state.status === "no-candidates")
+    return (
+      <p role="alert">
+        No movies currently qualify for the cold-start list (at least 100 ratings).{" "}
+        <Link to="/recommendations/setup">Try again later</Link>
+      </p>
+    );
 
   return (
     <div>
-      <h1>Recommendations{genreId ? `: ${genreId}` : ""}</h1>
+      <h1>
+        {state.mode === "cold-start" ? "Trending recommendations" : "Recommendations"}
+        {state.mode !== "cold-start" && genreId ? `: ${genreId}` : ""}
+      </h1>
       <p><Link to="/recommendations/setup">Change genre</Link></p>
       <table border="1">
         <thead>
-          <tr><th>ID</th><th>Title</th><th>Genre</th><th>Rating</th></tr>
+          <tr><th>Title</th><th>Genre</th><th>IMDb rating</th><th>IMDb votes</th></tr>
         </thead>
         <tbody>
           {state.movies.map((m) => (
             <tr key={m.id}>
-              <td>{m.id}</td><td>{m.title}</td><td>{m.genre}</td><td>{m.rating}</td>
+              <td><a href={`https://www.imdb.com/title/${m.imdb_id}/`} target="_blank" rel="noreferrer">{m.title}</a></td>
+              <td>{m.genre}</td><td>{m.rating.toFixed(1)}/10</td><td>{m.rating_count.toLocaleString()}</td>
             </tr>
           ))}
         </tbody>

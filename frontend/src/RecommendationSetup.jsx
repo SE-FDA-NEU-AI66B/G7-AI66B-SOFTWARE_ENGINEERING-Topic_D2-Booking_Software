@@ -44,6 +44,10 @@ function RecommendationSetup({ session, onSignOut }) {
     navigate(`/recommendations?genre_id=${encodeURIComponent(selected)}`);
   }
 
+  function handleSurpriseMe() {
+    navigate("/recommendations");
+  }
+
   return (
     <main className="setup-page">
       <h1>What are you in the mood for?</h1>
@@ -80,6 +84,9 @@ function RecommendationSetup({ session, onSignOut }) {
           </div>
           <button type="submit" className="primary-link" disabled={!selected}>
             Continue
+          </button>
+          <button type="button" className="primary-link" onClick={handleSurpriseMe}>
+            Get recommendations
           </button>
           {!selected && <p className="muted">Pick a genre to continue.</p>}
         </form>

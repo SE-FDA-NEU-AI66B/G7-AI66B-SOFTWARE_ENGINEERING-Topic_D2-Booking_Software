@@ -60,6 +60,7 @@ This creates `data/smartcine.db` and seeds it with **30 movies** from `data/movi
 ```
 Seeded 30 movies from data/movies.csv into data/smartcine.db
 ```
+Movie titles, IMDb average ratings, vote counts, and IMDb IDs in the CSV are sourced from the [IMDb non-commercial datasets](https://developer.imdb.com/non-commercial-datasets/). The checked-in values are a snapshot retrieved on 2026-10-18; the IMDb dataset is provided for non-commercial use only.
 
 ## 5. Run it and verify
 
@@ -73,7 +74,7 @@ The API documentation is at http://localhost:5000/docs.
 **It worked if:**
 1. You see the SmartCine sign-in page.
 2. Signing in with the [test account](#test-account) shows "Who's watching?" with two profiles, Alex and Sam.
-3. 3. Choosing a profile opens "What are you in the mood for?" with three genres: Horror, Romance and Thriller. Pick one and press Continue: the page lists 10 movies of that genre, each with an ID, title, genre and rating (e.g. "The Conjuring", "Horror", 7.5).
+3. Choosing a profile opens "What are you in the mood for?" with three genres: Horror, Romance and Thriller. Choose a genre for personalized recommendations, or press **Get recommendations** for the cold-start list. Profiles with fewer than five rated or watched movies get ten trending movies with at least 100 IMDb votes.
 4. Signing in with a wrong password shows "The email or password is incorrect."
 
 ## 6. Troubleshooting
