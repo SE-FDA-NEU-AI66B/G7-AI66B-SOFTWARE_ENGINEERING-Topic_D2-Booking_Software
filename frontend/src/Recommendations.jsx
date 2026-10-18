@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 
 export default function Recommendations({ token, profileId }) {
   const [state, setState] = useState({ status: "loading", movies: [] });
@@ -8,11 +8,9 @@ export default function Recommendations({ token, profileId }) {
   const genreId = params.get("genre_id");
 
   useEffect(() => {
+    if (!genreId) return;
     let cancelled = false;
-    const url = genreId
-      ? `/api/v1/recommendations?genre_id=${encodeURIComponent(genreId)}`
-      : "/api/v1/recommendations";
-    fetch(url, {
+    fetch(`/api/v1/recommendations?genre_id=${encodeURIComponent(genreId)}`, {
       headers: { Authorization: `Bearer ${token}`, "X-Profile-Id": String(profileId) },
     })
       .then((r) => {
@@ -35,6 +33,7 @@ export default function Recommendations({ token, profileId }) {
     setAttempt((n) => n + 1);
   }
 
+  if (!genreId) return <Navigate to="/recommendations/setup" replace />;
   if (state.status === "loading") return <p>Loading recommendations...</p>;
   if (state.status === "error")
     return (

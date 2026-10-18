@@ -65,7 +65,7 @@ def test_recommendations_filtered_by_genre_returns_only_that_genre(client):
     assert {m["genre"] for m in movies} == {"Thriller"}
 
 
-def test_recommendations_without_genre_returns_all_up_to_10(client):
+def test_recommendations_without_genre_returns_all_movies(client):
     res = client.get("/api/v1/recommendations", headers=auth_headers(client))
     assert res.status_code == 200
     assert len(res.json()) == len(MOVIES)
@@ -77,3 +77,28 @@ def test_recommendations_for_unknown_genre_returns_empty_list(client):
     )
     assert res.status_code == 200
     assert res.json() == []
+
+
+def test_recommendations_are_limited_to_10(client):
+    conn = auth.get_conn()
+    conn.executemany(
+        "INSERT INTO movie VALUES (?, ?, ?, ?)",
+        [(100 + i, f"Extra {i}", "Drama", 7.0) for i in range(11)],
+    )
+    conn.commit()
+    conn.close()
+    res = client.get(
+        "/api/v1/recommendations?genre_id=Drama", headers=auth_headers(client)
+    )
+    assert len(res.json()) == 10  # BR3
+
+
+def test_recommendations_exclude_movies_rated_below_6(client):
+    conn = auth.get_conn()
+    conn.execute("INSERT INTO movie VALUES (50, 'Weak Horror', 'Horror', 5.0)")
+    conn.commit()
+    conn.close()
+    res = client.get(
+        "/api/v1/recommendations?genre_id=Horror", headers=auth_headers(client)
+    )
+    assert "Weak Horror" not in [m["title"] for m in res.json()]  # BR4

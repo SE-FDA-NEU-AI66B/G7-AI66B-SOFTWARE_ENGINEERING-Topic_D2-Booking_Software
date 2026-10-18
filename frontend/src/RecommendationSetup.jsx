@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authHeaders } from "./session.js";
+import "./profiles.css";
 
 // US06: ask for a theme/genre before showing any movies.
 function RecommendationSetup({ session, onSignOut }) {
@@ -51,7 +52,7 @@ function RecommendationSetup({ session, onSignOut }) {
 
       {state.status === "error" && (
         <div role="alert" className="login-error">
-          Không tải được danh sách thể loại, thử lại{" "}
+          We can't load the genres.{" "}
           <button type="button" className="link" onClick={load}>
             Try again
           </button>
@@ -64,13 +65,12 @@ function RecommendationSetup({ session, onSignOut }) {
 
       {state.status === "data" && (
         <form onSubmit={handleSubmit} className="genre-form">
-          <div className="genre-list" role="radiogroup" aria-label="Genre">
+          <div className="genre-list" role="group" aria-label="Genre">
             {state.genres.map((g) => (
               <button
                 type="button"
                 key={g.id}
-                role="radio"
-                aria-checked={selected === g.id}
+                aria-pressed={selected === g.id}
                 className={`genre-chip${selected === g.id ? " selected" : ""}`}
                 onClick={() => setSelected(g.id)}
               >

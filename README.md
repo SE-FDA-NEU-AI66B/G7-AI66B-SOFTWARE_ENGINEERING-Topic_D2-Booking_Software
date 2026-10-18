@@ -6,11 +6,11 @@ SmartCine is an intelligent movie recommendation platform that solves the "what 
 | Name | GitHub username | Role |
 | --- | --- | --- |
 | Hoang Thi Phuong Linh | phuonglinhtla | Member |
-| Nguyen Quang Huy | KatsuroNguyen | Product Owner |
+| Nguyen Quang Huy | KatsuroHuy | Product Owner |
 | Nguyen Vinh Hung | Nvhwng | Member |
 | Be Thanh Dat | th3dummyking | Member |
 
-Scrum Master: @KatsuroNguyen (Sprint 1), @th3dummyking (Sprint 2)
+Scrum Master: @KatsuroHuy (Sprint 1), @th3dummyking (Sprint 2), @Nvhwng (Sprint 3)
 Board: https://github.com/orgs/SE-FDA-NEU-AI66B/projects/9
 Setup Guide: https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/blob/main/docs/SETUP.md
 

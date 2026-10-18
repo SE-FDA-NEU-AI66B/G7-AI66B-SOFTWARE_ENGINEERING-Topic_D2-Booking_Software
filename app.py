@@ -8,7 +8,7 @@ from auth import get_conn, get_current_profile
 from auth import router as auth_router
 from profiles import router as profiles_router
 
-load_dotenv()  
+load_dotenv()
 
 app = FastAPI(title="SmartCine")
 app.include_router(auth_router)
@@ -20,25 +20,28 @@ def get_recommendation_genres(_profile_id: int = Depends(get_current_profile)):
     conn = get_conn()
     try:
         rows = conn.execute(
-            "SELECT DISTINCT genre AS id, genre AS name FROM movie WHERE genre IS NOT NULL AND genre != ''"
+            "SELECT DISTINCT genre AS id, genre AS name FROM movie "
+            "WHERE genre IS NOT NULL AND genre != '' ORDER BY genre"
         ).fetchall()
     finally:
         conn.close()
     return [dict(r) for r in rows]
 
+
 @app.get("/api/v1/recommendations")
-def recommendations(genre_id: str = None, _profile_id: int = Depends(get_current_profile)):
+def recommendations(
+    genre_id: str | None = None,
+    _profile_id: int = Depends(get_current_profile),
+):
+    query = "SELECT id, title, genre, rating FROM movie WHERE rating >= 6.0"  # BR4
+    params: tuple = ()
+    if genre_id:
+        query += " AND genre = ?"
+        params = (genre_id,)
+    query += " ORDER BY id LIMIT 10"  # BR3
     conn = get_conn()
     try:
-        if genre_id:
-            rows = conn.execute(
-                "SELECT id, title, genre, rating FROM movie WHERE genre = ? ORDER BY id LIMIT 10",
-                (genre_id,)
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                "SELECT id, title, genre, rating FROM movie ORDER BY id LIMIT 10"
-            ).fetchall()
+        rows = conn.execute(query, params).fetchall()
     finally:
         conn.close()
     return [dict(r) for r in rows]

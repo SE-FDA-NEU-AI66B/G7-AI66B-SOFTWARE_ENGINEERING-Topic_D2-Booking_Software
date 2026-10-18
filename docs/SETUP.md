@@ -56,9 +56,9 @@ No values need to be changed — the defaults (`DB_PATH=data/smartcine.db`,`PORT
 python init_db.py
 ```
 
-This creates `data/smartcine.db` and seeds it with **12 movies** from `data/movies.csv`, plus one test account with two profiles (see [Test account](#test-account)). You should see:
+This creates `data/smartcine.db` and seeds it with **30 movies** from `data/movies.csv`, plus one test account with two profiles (see [Test account](#test-account)). You should see:
 ```
-Seeded 12 movies from data/movies.csv into data/smartcine.db
+Seeded 30 movies from data/movies.csv into data/smartcine.db
 ```
 
 ## 5. Run it and verify
@@ -73,7 +73,7 @@ The API documentation is at http://localhost:5000/docs.
 **It worked if:**
 1. You see the SmartCine sign-in page.
 2. Signing in with the [test account](#test-account) shows "Who's watching?" with two profiles, Alex and Sam.
-3. Choosing a profile opens the recommendations setup page; its "See recommendations" button shows a table with 10 movies, each with an ID, title, genre, and rating (e.g. "Oldboy", "Thriller", 8.4).
+3. 3. Choosing a profile opens "What are you in the mood for?" with three genres: Horror, Romance and Thriller. Pick one and press Continue: the page lists 10 movies of that genre, each with an ID, title, genre and rating (e.g. "The Conjuring", "Horror", 7.5).
 4. Signing in with a wrong password shows "The email or password is incorrect."
 
 ## 6. Troubleshooting

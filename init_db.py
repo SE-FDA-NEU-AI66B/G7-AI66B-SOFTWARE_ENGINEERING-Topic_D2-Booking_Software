@@ -2,7 +2,11 @@ import csv
 import os
 import sqlite3
 
+from dotenv import load_dotenv
+
 from auth import ensure_schema_and_seed
+
+load_dotenv()
 
 DB_PATH = os.environ.get("DB_PATH", "data/smartcine.db")
 CSV_PATH = os.environ.get("MOVIES_CSV", "data/movies.csv")
