@@ -15,16 +15,34 @@ app.include_router(auth_router)
 app.include_router(profiles_router)
 
 
-@app.get("/api/v1/recommendations")
-def recommendations(_profile_id: int = Depends(get_current_profile)):
+@app.get("/api/v1/recommendations/setup/genres")
+def get_recommendation_genres(_profile_id: int = Depends(get_current_profile)):
     conn = get_conn()
     try:
         rows = conn.execute(
-            "SELECT id, title, genre, rating FROM movie ORDER BY id LIMIT 10"
+            "SELECT DISTINCT genre AS id, genre AS name FROM movie WHERE genre IS NOT NULL AND genre != ''"
         ).fetchall()
     finally:
         conn.close()
     return [dict(r) for r in rows]
+
+@app.get("/api/v1/recommendations")
+def recommendations(genre_id: str = None, _profile_id: int = Depends(get_current_profile)):
+    conn = get_conn()
+    try:
+        if genre_id:
+            rows = conn.execute(
+                "SELECT id, title, genre, rating FROM movie WHERE genre = ? ORDER BY id LIMIT 10",
+                (genre_id,)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT id, title, genre, rating FROM movie ORDER BY id LIMIT 10"
+            ).fetchall()
+    finally:
+        conn.close()
+    return [dict(r) for r in rows]
+
 
 # Serve the built React app. Must stay AFTER all API routes.
 if os.path.isdir("frontend/dist"):
