@@ -320,58 +320,52 @@ The "Duyen" account has 2 profiles — "Duyen" (20 rated movies) and "Housemate"
 ## 6. Screens and flow
 
 
+### P0 story implementation status
 
-| Route | Purpose | Access | Priority |
-|---|---|---|---|
-| `/` | Landing page — intro, entry point | G | P0 |
-| `/login` | Sign in / sign up | G | P0 |
-| `/recommendations/setup` | Ask theme/topic and who you're watching with, before generating a list | U | P0 |
-| `/recommendations` | Show personalized or cold-start movie list | U | P0 |
-| `/movie/:id` | Movie detail — view info, mark as watched, submit a rating | U | P0 |
-| `/profile/ratings` | View and manage movies you've rated | U | P1 |
-| `/profiles` | Select which profile is watching (like "Who's watching?") | U | P0 |
+Status reflects the implementation currently present in the repository at submission time. “Works” means the story's stated user-facing behavior is implemented; “Partly works” means the main route exists but one or more acceptance criteria are incomplete.
 
-**Flow diagram:**
+| Story | Screen(s) | Route | Status | Issue |
+|---|---|---|---|---|
+| US01 — Cold-start recommendations | Recommendation setup, recommendation list | `/recommendations/setup` → `/recommendations` | Works | [#23](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/23) |
+| US02 — Rate a watched movie | Movie detail | `/movie/:id` | Works | [#24](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/24) |
+| US03 — Personalized recommendations | Recommendation setup, recommendation list | `/recommendations/setup` → `/recommendations` | Partly works — threshold and movie quality filter exist, but recommendations are not weighted by the user's genre preferences | [#25](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/25) |
+| US04 — Exclude watched movies | Recommendation list, movie detail | `/recommendations` ↔ `/movie/:id` | Works | [#26](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/26) |
+| US06 — Choose a theme before recommendations | Recommendation setup, recommendation list | `/recommendations/setup` → `/recommendations` | Partly works — genre filtering applies to personalized recommendations; the cold-start path ignores the selected genre | [#27](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/27), [#28](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/28) |
+| US10 — Select a profile before watching | Login, profile selection, recommendation setup | `/login` → `/profiles` → `/recommendations/setup` | Works | [#32](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/32) |
 
+### Screen routes and implementation status
 
+| Route | Purpose | Access | Priority | Status |
+|---|---|---|---|---|
+| `/` | Landing page / entry point | Guest | P0 | Not started — falls through to the login redirect |
+| `/login` | Sign in with email and password | Guest | P0 | Works |
+| `/profiles` | Select the active profile | Signed in | P0 | Works |
+| `/recommendations/setup` | Choose a genre or request recommendations directly | Signed in with profile | P0 | Works |
+| `/recommendations` | Show personalized or cold-start recommendations | Signed in with profile | P0 | Partly works — cold-start is implemented; personalized picks are not genre-weighted |
+| `/movie/:id` | View a movie, save/update a rating, or mark it watched | Signed in with profile | P0 | Works |
+| `/profile/ratings` | View and manage rated movies | Signed in with profile | P1 | Not started — route is not registered |
 
+Access: Guest means no sign-in is required; Signed in means an authenticated session; Signed in with profile requires an active selected profile.
 
+### Updated screen flow (M1)
+
+This updates the original M1 flow rather than removing the flow diagram: the old ASCII sketch is replaced with the current route-level flow. The landing page and ratings-history screen remain in the route inventory above, but are not shown as working steps because they are not implemented. A user must select a profile before entering the recommendation flow. From setup, they can choose a genre or request recommendations without selecting one. Movie titles open the in-app detail page; returning to recommendations makes a newly watched movie eligible for exclusion from the refreshed list.
+
+```mermaid
+flowchart TD
+    A[Open SmartCine] --> B["/login"]
+    B -->|Sign in succeeds| C["/profiles"]
+    C -->|Select profile| D["/recommendations/setup"]
+    D -->|Choose genre and Continue| E["/recommendations?genre_id=..."]
+    D -->|Get recommendations| F["/recommendations"]
+    E --> G[Select a movie title]
+    F --> G
+    G --> H["/movie/:id"]
+    H -->|Save or update rating| H
+    H -->|Mark as watched| H
+    H -->|Back to recommendations| F
+    F -->|Switch profile| C
+    C -->|Sign out| B
 ```
-                     +------------------+
-                     |        /         |   (not signed in)
-                     +------------------+
-                              |
-                              | sign in
-                              v
-                     +------------------+
-                     |     /login       |
-                     +------------------+
-                              |
-                              | success
-                              v
-                     +------------------+
-                     |    /profiles     |
-                     +------------------+
-                              |
-                              | get recommendations
-                              v
-               +-------------------------------+
-               |   /recommendations/setup      |
-               +-------------------------------+
-                              |
-                              | submit
-                              v
-   +-->  +--------------------------+   pick a movie    +------------------------+
-   |     |     /recommendations     | -----------------> |      /movie/:id        |
-   |     |                          | <----------------- |  rate / mark watched   |
-   |     +--------------------------+        back        +------------------------+
-   |                    |
-   |                    | view ratings
-   |                    v
-   |          +------------------------+
-   |          |    /profile/ratings    |
-   |          +------------------------+
-   |                    |
-   +--------------------+
-            back
-```
+
+Route guards redirect unauthenticated visitors to `/login` and signed-in users without an active profile to `/profiles`. For users below the preference threshold, `/recommendations` displays the cold-start list (or the unavailable state if fewer than 10 eligible movies exist).

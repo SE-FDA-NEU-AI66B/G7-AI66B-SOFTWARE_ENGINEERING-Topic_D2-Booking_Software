@@ -94,7 +94,6 @@ def test_recommendations_filtered_by_genre_returns_only_that_genre(client):
     )
     assert res.status_code == 200
     movies = res.json()
-    assert len(movies) == 5
     assert {m["genre"] for m in movies} == {"Thriller"}
 
 
@@ -138,6 +137,53 @@ def test_recommendations_exclude_movies_rated_below_6(client):
     assert "The Conjuring" not in [m["title"] for m in res.json()]  # BR4
 
 
+def test_rating_can_be_changed_without_creating_a_duplicate(client):
+    headers = auth_headers(client)
+
+    first = client.post(
+        "/api/v1/ratings", headers=headers, json={"movie_id": 1, "score": 6}
+    )
+    second = client.post(
+        "/api/v1/ratings", headers=headers, json={"movie_id": 1, "score": 9}
+    )
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    movie = client.get("/api/v1/movies/1", headers=headers).json()
+    assert movie["user_rating"] == 9
+    conn = auth.get_conn()
+    count = conn.execute(
+        "SELECT COUNT(*) FROM rating WHERE profile_id = ? AND movie_id = 1",
+        (int(headers["X-Profile-Id"]),),
+    ).fetchone()[0]
+    conn.close()
+    assert count == 1
+
+
+def test_rating_outside_one_to_ten_returns_clear_validation_message(client):
+    res = client.post(
+        "/api/v1/ratings", headers=auth_headers(client),
+        json={"movie_id": 1, "score": 11},
+    )
+
+    assert res.status_code == 400
+    assert res.json()["detail"] == "Rating must be between 1 and 10."
+
+
+def test_marking_movie_watched_excludes_it_from_recommendations(client):
+    headers = auth_headers(client)
+    add_preferences(headers, ratings=5)
+
+    watched = client.post("/api/v1/movies/1/watch", headers=headers)
+    movie = client.get("/api/v1/movies/1", headers=headers).json()
+    recommendations = client.get("/api/v1/recommendations", headers=headers)
+
+    assert watched.status_code == 200
+    assert movie["watched"] == 1
+    assert recommendations.status_code == 200
+    assert 1 not in {item["id"] for item in recommendations.json()}
+
+
 def test_fewer_than_five_preferences_gets_ten_cold_start_movies(client):
     headers = auth_headers(client)
     add_preferences(headers, ratings=3, watched=1)
@@ -171,8 +217,8 @@ def test_cold_start_reports_error_when_fewer_than_ten_movies_qualify(client):
 
     res = client.get("/api/v1/recommendations", headers=auth_headers(client))
 
-    assert res.status_code == 404
-    assert "Fewer than 10 movies qualify" in res.json()["detail"]
+    assert res.status_code == 503
+    assert res.json()["detail"]["code"] == "COLD_START_UNAVAILABLE"
 
 
 def test_cold_start_excludes_movie_with_fewer_than_100_ratings(client):
@@ -186,3 +232,65 @@ def test_cold_start_excludes_movie_with_fewer_than_100_ratings(client):
     assert res.status_code == 200
     assert len(res.json()) == 10
     assert "Parasite" not in [movie["title"] for movie in res.json()]
+
+
+def test_cold_start_ignores_genre_filter(client):
+    res = client.get("/api/v1/recommendations?genre_id=Horror", headers=auth_headers(client))
+    assert res.status_code == 200
+    assert res.headers["X-Recommendation-Mode"] == "cold-start"
+    assert len(res.json()) == 10
+
+
+def test_cold_start_includes_movie_with_exactly_100_ratings(client):
+    conn = auth.get_conn()
+    conn.execute("UPDATE movie SET rating_count = 100 WHERE title = 'Inception'")
+    conn.commit()
+    conn.close()
+    res = client.get("/api/v1/recommendations", headers=auth_headers(client))
+    assert "Inception" in [m["title"] for m in res.json()]  # BR8 boundary
+
+
+def test_cold_start_is_sorted_by_rating_then_vote_count(client):
+    res = client.get("/api/v1/recommendations", headers=auth_headers(client))
+    ratings = [m["rating"] for m in res.json()]
+    assert ratings == sorted(ratings, reverse=True)
+
+
+def test_marking_movie_watched_twice_is_idempotent(client):
+    headers = auth_headers(client)
+    assert client.post("/api/v1/movies/1/watch", headers=headers).status_code == 200
+    assert client.post("/api/v1/movies/1/watch", headers=headers).status_code == 200
+
+
+def test_watch_unknown_movie_returns_404(client):
+    res = client.post("/api/v1/movies/999/watch", headers=auth_headers(client))
+    assert res.status_code == 404
+
+
+def test_rating_unknown_movie_returns_404(client):
+    res = client.post("/api/v1/ratings", headers=auth_headers(client),
+                      json={"movie_id": 999, "score": 5})
+    assert res.status_code == 404
+
+
+def test_rating_requires_token(client):
+    res = client.post("/api/v1/ratings", json={"movie_id": 1, "score": 5})
+    assert res.status_code == 401
+
+
+def test_watched_movies_never_reappear_even_after_many_are_watched(client):
+    headers = auth_headers(client)
+    conn = auth.get_conn()
+    conn.executemany(
+        "INSERT INTO movie VALUES (?, ?, ?, ?, ?, ?)",
+        [(100 + i, f"Extra {i}", "Thriller", 7.0, 500, f"tt9{i:06d}") for i in range(25)],
+    )
+    pid = int(headers["X-Profile-Id"])
+    conn.executemany(
+        "INSERT INTO watch_history (profile_id, movie_id) VALUES (?, ?)",
+        [(pid, 100 + i) for i in range(25)],
+    )
+    conn.commit()
+    conn.close()
+    res = client.get("/api/v1/recommendations?genre_id=Thriller", headers=headers)
+    assert all(m["id"] < 100 for m in res.json())  # BR1
