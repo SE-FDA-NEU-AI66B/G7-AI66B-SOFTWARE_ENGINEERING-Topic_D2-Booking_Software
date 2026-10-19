@@ -1,13 +1,31 @@
-id,title,genre,rating
-1,Oldboy,Thriller,8.4
-2,The Notebook,Romance,7.8
-3,Parasite,Thriller,8.6
-4,La La Land,Romance,8.0
-5,Shutter Island,Thriller,8.2
-6,Pride and Prejudice,Romance,7.9
-7,Gone Girl,Thriller,8.1
-8,The Vow,Romance,7.2
-9,Inception,Thriller,8.8
-10,Titanic,Romance,7.9
-11,Memento,Thriller,8.4
-12,Me Before You,Romance,7.4
+id,title,genre,rating,rating_count,imdb_id
+1,Oldboy,Thriller,8.3,735723,tt0364569
+2,The Notebook,Romance,7.8,704780,tt0332280
+3,Parasite,Thriller,8.5,1203068,tt6751668
+4,La La Land,Romance,8.0,781879,tt3783958
+5,Shutter Island,Thriller,8.2,1691555,tt1130884
+6,Pride and Prejudice,Romance,7.8,384447,tt0414387
+7,Gone Girl,Thriller,8.1,1192084,tt2267998
+8,The Vow,Romance,6.8,216069,tt1606389
+9,Inception,Thriller,8.8,2880387,tt1375666
+10,Titanic,Romance,8.0,1417134,tt0120338
+11,Memento,Thriller,8.4,1463441,tt0209144
+12,Me Before You,Romance,7.4,345468,tt2674426
+13,The Conjuring,Horror,7.5,635470,tt1457767
+14,Hereditary,Horror,7.3,473397,tt7784604
+15,Get Out,Horror,7.8,842084,tt5052448
+16,A Quiet Place,Horror,7.5,671686,tt6644200
+17,The Shining,Horror,8.4,1248440,tt0081505
+18,The Exorcist,Horror,8.1,507048,tt0070047
+19,Midsommar,Horror,7.1,501294,tt8772262
+20,Sinister,Horror,6.8,325012,tt1922777
+21,Insidious,Horror,6.8,375304,tt1591095
+22,It,Horror,7.3,712923,tt1396484
+23,Prisoners,Thriller,8.2,963812,tt1392214
+24,Se7en,Thriller,8.6,2069228,tt0114369
+25,Zodiac,Thriller,7.7,694016,tt0443706
+26,Nightcrawler,Thriller,7.8,684678,tt2872718
+27,Before Sunrise,Romance,8.1,385592,tt0112471
+28,Eternal Sunshine of the Spotless Mind,Romance,8.3,1199727,tt0338013
+29,Notting Hill,Romance,7.2,391705,tt0125439
+30,Crazy Rich Asians,Romance,6.9,212533,tt3104988
