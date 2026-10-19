@@ -139,3 +139,7 @@ button.primary-link:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.movie-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+.movie-table th, .movie-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #333; }
+.movie-table a { color: var(--gold); }

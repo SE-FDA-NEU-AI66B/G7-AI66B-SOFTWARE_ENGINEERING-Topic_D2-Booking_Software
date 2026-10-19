@@ -74,7 +74,7 @@ The API documentation is at http://localhost:5000/docs.
 **It worked if:**
 1. You see the SmartCine sign-in page.
 2. Signing in with the [test account](#test-account) shows "Who's watching?" with two profiles, Alex and Sam.
-3. Choosing a profile opens "What are you in the mood for?" with three genres: Horror, Romance and Thriller. Choose a genre for personalized recommendations, or press **Get recommendations** for the cold-start list. Profiles with fewer than five rated or watched movies get ten trending movies with at least 100 IMDb votes.
+3. Choosing a profile opens "What are you in the mood for?" with three genres: Horror, Romance and Thriller. Choose a genre for personalized recommendations, or press **Get recommendations** for the cold-start list. The demo account has no ratings yet, so either button shows the cold-start list: ten most-voted movies with at least 100 IMDb votes (the genre choice only applies once a profile has five or more rated or watched movies).
 4. Signing in with a wrong password shows "The email or password is incorrect."
 
 ## 6. Troubleshooting

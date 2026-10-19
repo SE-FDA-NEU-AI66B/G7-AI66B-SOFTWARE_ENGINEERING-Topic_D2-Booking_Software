@@ -27,11 +27,11 @@ Numbered, so issues and tests can cite them.
 |---|---|---|---|
 | BR1 | Don't recommend already-watched movies | /recommendations | TBD |
 | BR2 | Don't recommend movies above user's age rating | /recommendations | TBD |
-| BR3 | Max 10 movies per recommendation request | /recommendations | `tests/test_recommendations.py::test_recommendations_are_limited_to_10` |
-| BR4 | Min 6.0/10 rating for personalized pool | /recommendations | TBD |
-| BR5 | Personalized mode requires ≥5 rated/watched movies | /recommendations | TBD |
-| BR6 | Cold-start uses trending/critically acclaimed movies | /recommendations | TBD |
+| BR3 | Max 10 movies per recommendation request | /recommendations | test_recommendations_are_limited_to_10
+| BR4 | Min 6.0/10 rating for personalized pool | /recommendations | test_recommendations_exclude_movies_rated_below_6 |
+| BR5 | Personalized mode requires ≥5 rated/watched movies | /recommendations | test_fewer_than_five_preferences_gets_ten_cold_start_movies, test_five_preferences_uses_personalized_path |
+| BR6 | Cold-start uses trending/critically acclaimed movies | /recommendations | test_recommendations_without_genre_returns_cold_start_list, test_cold_start_is_sorted_by_rating_then_vote_count |
 | BR7 | No duplicate movies in one result list | /recommendations | TBD |
-| BR8 | Min 100 ratings to qualify for cold-start pool | /recommendations | TBD |
+| BR8 | Min 100 ratings to qualify for cold-start pool | /recommendations | test_cold_start_excludes_movie_with_fewer_than_100_ratings, test_cold_start_includes_movie_with_exactly_100_ratings |
 | BR9 | Tie-break by rating count then release year | /recommendations | TBD |
 | BR10 | A profile belongs to exactly one account; a joint session can only merge profiles from the same account | /profiles, `get_current_profile` in `auth.py` | ...

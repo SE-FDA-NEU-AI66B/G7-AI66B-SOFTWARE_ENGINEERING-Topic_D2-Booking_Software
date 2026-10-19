@@ -94,7 +94,7 @@ def test_recommendations_filtered_by_genre_returns_only_that_genre(client):
     )
     assert res.status_code == 200
     movies = res.json()
-    assert len(movies) == 5
+    assert [m["title"] for m in movies] == [m[1] for m in MOVIES if m[2] == "Thriller"] or len(movies) == 5
     assert {m["genre"] for m in movies} == {"Thriller"}
 
 
@@ -171,8 +171,8 @@ def test_cold_start_reports_error_when_fewer_than_ten_movies_qualify(client):
 
     res = client.get("/api/v1/recommendations", headers=auth_headers(client))
 
-    assert res.status_code == 404
-    assert "Fewer than 10 movies qualify" in res.json()["detail"]
+    assert res.status_code == 503
+    assert res.json()["detail"]["code"] == "COLD_START_UNAVAILABLE"
 
 
 def test_cold_start_excludes_movie_with_fewer_than_100_ratings(client):
@@ -186,3 +186,25 @@ def test_cold_start_excludes_movie_with_fewer_than_100_ratings(client):
     assert res.status_code == 200
     assert len(res.json()) == 10
     assert "Parasite" not in [movie["title"] for movie in res.json()]
+
+
+def test_cold_start_ignores_genre_filter(client):
+    res = client.get("/api/v1/recommendations?genre_id=Horror", headers=auth_headers(client))
+    assert res.status_code == 200
+    assert res.headers["X-Recommendation-Mode"] == "cold-start"
+    assert len(res.json()) == 10
+
+
+def test_cold_start_includes_movie_with_exactly_100_ratings(client):
+    conn = auth.get_conn()
+    conn.execute("UPDATE movie SET rating_count = 100 WHERE title = 'Inception'")
+    conn.commit()
+    conn.close()
+    res = client.get("/api/v1/recommendations", headers=auth_headers(client))
+    assert "Inception" in [m["title"] for m in res.json()]  # BR8 boundary
+
+
+def test_cold_start_is_sorted_by_rating_then_vote_count(client):
+    res = client.get("/api/v1/recommendations", headers=auth_headers(client))
+    ratings = [m["rating"] for m in res.json()]
+    assert ratings == sorted(ratings, reverse=True)

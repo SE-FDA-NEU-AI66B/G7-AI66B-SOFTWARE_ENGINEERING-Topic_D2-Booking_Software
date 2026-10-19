@@ -52,9 +52,11 @@ def recommendations(
             ).fetchall()
             if len(rows) < 10:
                 raise HTTPException(
-                    status_code=404,
-                    detail="Fewer than 10 movies qualify for cold-start "
-                    "recommendations (minimum 100 ratings).",
+                    status_code=503,
+                    detail={
+                        "code": "COLD_START_UNAVAILABLE",
+                        "message": "Fewer than 10 movies have at least 100 ratings.",
+                    },
                 )
             response.headers["X-Recommendation-Mode"] = "cold-start"
         else:

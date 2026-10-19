@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import "./profiles.css";
 
 export default function Recommendations({ token, profileId }) {
   const [state, setState] = useState({ status: "loading", movies: [], mode: null });
@@ -15,9 +16,9 @@ export default function Recommendations({ token, profileId }) {
     })
       .then((r) => {
         if (!r.ok) {
-          if (r.status === 404)
+          if (r.status === 503)
             return r.json().then((body) => {
-              if (String(body.detail).includes("qualify for cold-start")) {
+              if (body.detail?.code === "COLD_START_UNAVAILABLE") {
                 return { noCandidates: true };
               }
               throw new Error();
@@ -50,7 +51,7 @@ export default function Recommendations({ token, profileId }) {
   }, [attempt, token, profileId, genreId]);
 
   function retry() {
-    setState({ status: "loading", movies: [] });
+    setState({ status: "loading", movies: [], mode: null });
     setAttempt((n) => n + 1);
   }
 
@@ -83,7 +84,13 @@ export default function Recommendations({ token, profileId }) {
         {state.mode !== "cold-start" && genreId ? `: ${genreId}` : ""}
       </h1>
       <p><Link to="/recommendations/setup">Change genre</Link></p>
-      <table border="1">
+      {state.mode === "cold-start" && (
+        <p className="muted">
+          Rate or watch at least 5 movies to get picks matched to your taste.
+          Until then, these are the most-voted movies for everyone.
+        </p>
+      )}
+      <table className="movie-table">
         <thead>
           <tr><th>Title</th><th>Genre</th><th>IMDb rating</th><th>IMDb votes</th></tr>
         </thead>
