@@ -38,10 +38,12 @@ def get_movie(movie_id: int, _profile_id: int = Depends(get_current_profile)):
         conn.close()
     if row is None:
         raise HTTPException(status_code=404, detail="Movie not found.")
-    return dict(row)
+    data = dict(row)
+    data["watched"] = bool(data["watched"])
+    return data
 
 
-@app.post("/api/v1/ratings")
+@app.post("/api/v1/ratings", status_code=201)
 def save_rating(body: RatingRequest, profile_id: int = Depends(get_current_profile)):
     if not 1 <= body.score <= 10:
         raise HTTPException(
@@ -59,6 +61,10 @@ def save_rating(body: RatingRequest, profile_id: int = Depends(get_current_profi
             "INSERT INTO rating (profile_id, movie_id, score) VALUES (?, ?, ?) "
             "ON CONFLICT(profile_id, movie_id) DO UPDATE SET score = excluded.score",
             (profile_id, body.movie_id, body.score),
+        )
+        conn.execute(
+            "INSERT OR IGNORE INTO watch_history (profile_id, movie_id) VALUES (?, ?)",
+            (profile_id, body.movie_id),
         )
         conn.commit()
     finally:

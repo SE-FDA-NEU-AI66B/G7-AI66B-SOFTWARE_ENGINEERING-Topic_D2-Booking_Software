@@ -8,10 +8,10 @@ update this file should not be approved.
 | Route | Purpose | Access | Priority | Feature | Story issue | PR | Status |
 |---|---|---|---|---|---|---|---|
 | `/` | Landing page | G | P0 | F1 | — | TBD | Not started |
-| `/login` | Sign in with email and password | G | P0 | F1 | — | # | In progress |
-| `/recommendations/setup` | Ask theme/topic and companion before generating list | U | P0 | F4 | #27, #28 | TBD | Not started |
-| `/recommendations` | Show personalized or cold-start movie list | U | P0 | F2 | #23, #25, #29, #30, #31, #32 | TBD | Not started |
-| `/movie/:id` | Movie detail — view info, mark as watched, rate | U | P0 | F3 | #24, #26 | TBD | Not started |
+| `/login` | Sign in with email and password | G | P0 | F1 | — | #91 | In progress |
+| `/recommendations/setup` | Ask theme/topic and companion before generating list | U | P0 | F4 | #27, #28 | #91| In progress |
+| `/recommendations` | Show personalized or cold-start movie list | U | P0 | F2 | #23, #25, #29, #30, #31, #32 | TBD | In progress |
+| `/movie/:id` | Movie detail — view info, mark as watched, rate | U | P0 | F3 | #24, #26 | TBD | In progress |
 | `/profile/ratings` | View and manage movies you've rated | U | P1 | F3 | — | TBD | Not started |
 | `/profiles` | Select which profile is watching | U | P0 | F1 | #32 | #91 | In progress |
 
@@ -25,9 +25,9 @@ Numbered, so issues and tests can cite them.
 
 | # | Rule | Enforced where | Tested by |
 |---|---|---|---|
-| BR1 | Don't recommend already-watched movies | /recommendations | TBD |
+| BR1 | Don't recommend already-watched movies | /recommendations | test_marking_movie_watched_excludes_it_from_recommendations |
 | BR2 | Don't recommend movies above user's age rating | /recommendations | TBD |
-| BR3 | Max 10 movies per recommendation request | /recommendations | test_recommendations_are_limited_to_10
+| BR3 | Max 10 movies per recommendation request | /recommendations | test_recommendations_are_limited_to_10 |
 | BR4 | Min 6.0/10 rating for personalized pool | /recommendations | test_recommendations_exclude_movies_rated_below_6 |
 | BR5 | Personalized mode requires ≥5 rated/watched movies | /recommendations | test_fewer_than_five_preferences_gets_ten_cold_start_movies, test_five_preferences_uses_personalized_path |
 | BR6 | Cold-start uses trending/critically acclaimed movies | /recommendations | test_recommendations_without_genre_returns_cold_start_list, test_cold_start_is_sorted_by_rating_then_vote_count |

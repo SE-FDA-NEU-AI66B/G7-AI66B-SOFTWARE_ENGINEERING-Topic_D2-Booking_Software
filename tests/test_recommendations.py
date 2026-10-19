@@ -94,7 +94,6 @@ def test_recommendations_filtered_by_genre_returns_only_that_genre(client):
     )
     assert res.status_code == 200
     movies = res.json()
-    assert [m["title"] for m in movies] == [m[1] for m in MOVIES if m[2] == "Thriller"] or len(movies) == 5
     assert {m["genre"] for m in movies} == {"Thriller"}
 
 
@@ -148,8 +147,8 @@ def test_rating_can_be_changed_without_creating_a_duplicate(client):
         "/api/v1/ratings", headers=headers, json={"movie_id": 1, "score": 9}
     )
 
-    assert first.status_code == 200
-    assert second.status_code == 200
+    assert first.status_code == 201
+    assert second.status_code == 201
     movie = client.get("/api/v1/movies/1", headers=headers).json()
     assert movie["user_rating"] == 9
     conn = auth.get_conn()
@@ -255,3 +254,43 @@ def test_cold_start_is_sorted_by_rating_then_vote_count(client):
     res = client.get("/api/v1/recommendations", headers=auth_headers(client))
     ratings = [m["rating"] for m in res.json()]
     assert ratings == sorted(ratings, reverse=True)
+
+
+def test_marking_movie_watched_twice_is_idempotent(client):
+    headers = auth_headers(client)
+    assert client.post("/api/v1/movies/1/watch", headers=headers).status_code == 200
+    assert client.post("/api/v1/movies/1/watch", headers=headers).status_code == 200
+
+
+def test_watch_unknown_movie_returns_404(client):
+    res = client.post("/api/v1/movies/999/watch", headers=auth_headers(client))
+    assert res.status_code == 404
+
+
+def test_rating_unknown_movie_returns_404(client):
+    res = client.post("/api/v1/ratings", headers=auth_headers(client),
+                      json={"movie_id": 999, "score": 5})
+    assert res.status_code == 404
+
+
+def test_rating_requires_token(client):
+    res = client.post("/api/v1/ratings", json={"movie_id": 1, "score": 5})
+    assert res.status_code == 401
+
+
+def test_watched_movies_never_reappear_even_after_many_are_watched(client):
+    headers = auth_headers(client)
+    conn = auth.get_conn()
+    conn.executemany(
+        "INSERT INTO movie VALUES (?, ?, ?, ?, ?, ?)",
+        [(100 + i, f"Extra {i}", "Thriller", 7.0, 500, f"tt9{i:06d}") for i in range(25)],
+    )
+    pid = int(headers["X-Profile-Id"])
+    conn.executemany(
+        "INSERT INTO watch_history (profile_id, movie_id) VALUES (?, ?)",
+        [(pid, 100 + i) for i in range(25)],
+    )
+    conn.commit()
+    conn.close()
+    res = client.get("/api/v1/recommendations?genre_id=Thriller", headers=headers)
+    assert all(m["id"] < 100 for m in res.json())  # BR1

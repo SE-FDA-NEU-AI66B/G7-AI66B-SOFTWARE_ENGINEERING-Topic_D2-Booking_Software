@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./profiles.css";
 
+// Read the API's error message; fall back to plain text if the body isn't usable.
+async function readError(response, fallback) {
+  try {
+    const body = await response.json();
+    return typeof body.detail === "string" ? body.detail : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function MovieDetail({ token, profileId }) {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
@@ -28,8 +38,9 @@ export default function MovieDetail({ token, profileId }) {
         setScore(data.user_rating == null ? "" : String(data.user_rating));
         setStatus({ kind: "ready", message: "" });
       })
-      .catch((error) => {
-        if (!cancelled) setStatus({ kind: "error", message: error.message });
+      .catch(() => {
+        if (!cancelled)
+          setStatus({ kind: "error", message: "We can't load this movie. Check your connection and try again." });
       });
     return () => {
       cancelled = true;
@@ -55,12 +66,20 @@ export default function MovieDetail({ token, profileId }) {
         },
         body: JSON.stringify({ movie_id: movie.id, score: value }),
       });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.detail || "Could not save your rating.");
-      setMovie((current) => ({ ...current, user_rating: value }));
+      if (!response.ok) {
+        setStatus({
+          kind: "error",
+          message: await readError(response, "We couldn't save your rating. Please try again."),
+        });
+        return;
+      }
+      setMovie((current) => ({ ...current, user_rating: value, watched: true }));
       setStatus({ kind: "success", message: "Your rating has been saved." });
-    } catch (error) {
-      setStatus({ kind: "error", message: error.message });
+    } catch {
+      setStatus({
+        kind: "error",
+        message: "We can't reach the server. Check your connection and try again.",
+      });
     } finally {
       setBusy(false);
     }
@@ -76,12 +95,20 @@ export default function MovieDetail({ token, profileId }) {
           "X-Profile-Id": String(profileId),
         },
       });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.detail || "Could not mark this movie as watched.");
+      if (!response.ok) {
+        setStatus({
+          kind: "error",
+          message: await readError(response, "We couldn't mark this movie as watched. Please try again."),
+        });
+        return;
+      }
       setMovie((current) => ({ ...current, watched: true }));
       setStatus({ kind: "success", message: "Marked as watched. It will no longer appear in your recommendations." });
-    } catch (error) {
-      setStatus({ kind: "error", message: error.message });
+    } catch {
+      setStatus({
+        kind: "error",
+        message: "We can't reach the server. Check your connection and try again.",
+      });
     } finally {
       setBusy(false);
     }
