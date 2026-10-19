@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+junit.xml
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Secrets and local config (never commit)
+.env
+.env.*
+!.env.example
+
+# Local databases and dumps (recreate with: python init_db.py)
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
+
+# Frontend build and dependencies
+node_modules/
+frontend/dist/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

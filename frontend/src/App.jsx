@@ -55,7 +55,7 @@ function App() {
         />
         <Route
           path="/recommendations/setup"
-          element={requireProfile(<RecommendationSetup />)}
+          element={requireProfile(<RecommendationSetup session={session} onSignOut={signOut} />)}
         />
         <Route
           path="/recommendations"
