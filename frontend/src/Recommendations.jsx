@@ -97,7 +97,7 @@ export default function Recommendations({ token, profileId }) {
         <tbody>
           {state.movies.map((m) => (
             <tr key={m.id}>
-              <td><a href={`https://www.imdb.com/title/${m.imdb_id}/`} target="_blank" rel="noreferrer">{m.title}</a></td>
+              <td><Link to={`/movie/${m.id}`}>{m.title}</Link></td>
               <td>{m.genre}</td><td>{m.rating.toFixed(1)}/10</td><td>{m.rating_count.toLocaleString()}</td>
             </tr>
           ))}

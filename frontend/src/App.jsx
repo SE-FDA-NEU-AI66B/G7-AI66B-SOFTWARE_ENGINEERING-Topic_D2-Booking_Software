@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import Header from "./Header.jsx";
 import Login from "./Login.jsx";
+import MovieDetail from "./MovieDetail.jsx";
 import Profiles from "./Profiles.jsx";
 import Recommendations from "./Recommendations.jsx";
 import RecommendationSetup from "./RecommendationSetup.jsx";
@@ -62,6 +63,14 @@ function App() {
           element={requireProfile(
             session?.profile ? (
               <Recommendations token={session.access_token} profileId={session.profile.id} />
+            ) : null
+          )}
+        />
+        <Route
+          path="/movie/:id"
+          element={requireProfile(
+            session?.profile ? (
+              <MovieDetail token={session.access_token} profileId={session.profile.id} />
             ) : null
           )}
         />

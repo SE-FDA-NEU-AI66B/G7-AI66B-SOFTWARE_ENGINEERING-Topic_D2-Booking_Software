@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from auth import get_conn, get_current_profile
 from auth import router as auth_router
@@ -13,6 +14,75 @@ load_dotenv()
 app = FastAPI(title="SmartCine")
 app.include_router(auth_router)
 app.include_router(profiles_router)
+
+
+class RatingRequest(BaseModel):
+    movie_id: int
+    score: int
+
+
+@app.get("/api/v1/movies/{movie_id}")
+def get_movie(movie_id: int, _profile_id: int = Depends(get_current_profile)):
+    conn = get_conn()
+    try:
+        row = conn.execute(
+            "SELECT m.id, m.title, m.genre, m.rating, m.rating_count, m.imdb_id, "
+            "r.score AS user_rating, "
+            "EXISTS (SELECT 1 FROM watch_history w "
+            "WHERE w.profile_id = ? AND w.movie_id = m.id) AS watched "
+            "FROM movie m LEFT JOIN rating r "
+            "ON r.movie_id = m.id AND r.profile_id = ? WHERE m.id = ?",
+            (_profile_id, _profile_id, movie_id),
+        ).fetchone()
+    finally:
+        conn.close()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Movie not found.")
+    return dict(row)
+
+
+@app.post("/api/v1/ratings")
+def save_rating(body: RatingRequest, profile_id: int = Depends(get_current_profile)):
+    if not 1 <= body.score <= 10:
+        raise HTTPException(
+            status_code=400, detail="Rating must be between 1 and 10."
+        )
+
+    conn = get_conn()
+    try:
+        exists = conn.execute(
+            "SELECT 1 FROM movie WHERE id = ?", (body.movie_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Movie not found.")
+        conn.execute(
+            "INSERT INTO rating (profile_id, movie_id, score) VALUES (?, ?, ?) "
+            "ON CONFLICT(profile_id, movie_id) DO UPDATE SET score = excluded.score",
+            (profile_id, body.movie_id, body.score),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"movie_id": body.movie_id, "score": body.score}
+
+
+@app.post("/api/v1/movies/{movie_id}/watch")
+def mark_movie_watched(movie_id: int, profile_id: int = Depends(get_current_profile)):
+    conn = get_conn()
+    try:
+        exists = conn.execute(
+            "SELECT 1 FROM movie WHERE id = ?", (movie_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Movie not found.")
+        conn.execute(
+            "INSERT OR IGNORE INTO watch_history (profile_id, movie_id) VALUES (?, ?)",
+            (profile_id, movie_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"movie_id": movie_id, "watched": True}
 
 
 @app.get("/api/v1/recommendations/setup/genres")
@@ -47,8 +117,11 @@ def recommendations(
         if preference_count < 5:  # BR5 / BR6
             rows = conn.execute(
                 "SELECT id, title, genre, rating, rating_count, imdb_id FROM movie "
-                "WHERE rating_count >= 100 "
-                "ORDER BY rating DESC, rating_count DESC, id LIMIT 10"
+                "WHERE rating_count >= 100 AND NOT EXISTS ("
+                "SELECT 1 FROM watch_history w "
+                "WHERE w.profile_id = ? AND w.movie_id = movie.id) "
+                "ORDER BY rating DESC, rating_count DESC, id LIMIT 10",
+                (_profile_id,),
             ).fetchall()
             if len(rows) < 10:
                 raise HTTPException(
@@ -62,12 +135,14 @@ def recommendations(
         else:
             query = (
                 "SELECT id, title, genre, rating, rating_count, imdb_id "
-                "FROM movie WHERE rating >= 6.0"
+                "FROM movie WHERE rating >= 6.0 AND NOT EXISTS ("
+                "SELECT 1 FROM watch_history w "
+                "WHERE w.profile_id = ? AND w.movie_id = movie.id)"
             )  # BR4
-            params = ()
+            params = (_profile_id,)
             if genre_id:
                 query += " AND genre = ?"
-                params = (genre_id,)
+                params = (_profile_id, genre_id)
             query += " ORDER BY id LIMIT 10"  # BR3
             rows = conn.execute(query, params).fetchall()
             response.headers["X-Recommendation-Mode"] = "personalized"

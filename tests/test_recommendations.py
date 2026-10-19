@@ -138,6 +138,53 @@ def test_recommendations_exclude_movies_rated_below_6(client):
     assert "The Conjuring" not in [m["title"] for m in res.json()]  # BR4
 
 
+def test_rating_can_be_changed_without_creating_a_duplicate(client):
+    headers = auth_headers(client)
+
+    first = client.post(
+        "/api/v1/ratings", headers=headers, json={"movie_id": 1, "score": 6}
+    )
+    second = client.post(
+        "/api/v1/ratings", headers=headers, json={"movie_id": 1, "score": 9}
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    movie = client.get("/api/v1/movies/1", headers=headers).json()
+    assert movie["user_rating"] == 9
+    conn = auth.get_conn()
+    count = conn.execute(
+        "SELECT COUNT(*) FROM rating WHERE profile_id = ? AND movie_id = 1",
+        (int(headers["X-Profile-Id"]),),
+    ).fetchone()[0]
+    conn.close()
+    assert count == 1
+
+
+def test_rating_outside_one_to_ten_returns_clear_validation_message(client):
+    res = client.post(
+        "/api/v1/ratings", headers=auth_headers(client),
+        json={"movie_id": 1, "score": 11},
+    )
+
+    assert res.status_code == 400
+    assert res.json()["detail"] == "Rating must be between 1 and 10."
+
+
+def test_marking_movie_watched_excludes_it_from_recommendations(client):
+    headers = auth_headers(client)
+    add_preferences(headers, ratings=5)
+
+    watched = client.post("/api/v1/movies/1/watch", headers=headers)
+    movie = client.get("/api/v1/movies/1", headers=headers).json()
+    recommendations = client.get("/api/v1/recommendations", headers=headers)
+
+    assert watched.status_code == 200
+    assert movie["watched"] == 1
+    assert recommendations.status_code == 200
+    assert 1 not in {item["id"] for item in recommendations.json()}
+
+
 def test_fewer_than_five_preferences_gets_ten_cold_start_movies(client):
     headers = auth_headers(client)
     add_preferences(headers, ratings=3, watched=1)
