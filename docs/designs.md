@@ -182,19 +182,29 @@
 | watch_session | `id` random uuid, given to the Streaming Site · `status` IN (open, completed, expired) |
 | watch_event | UNIQUE(`watch_session_id`, `event_id`) → duplicate callbacks ignored · `watched_seconds` ≤ `runtime_seconds` |
 
+> **Implementation note (M3).** The schema built in Sprint 3 is a simplified subset of the design above:
+> `account(id, email, password_hash)`, `profile(id, account_id, name, avatar_color)`,
+> `movie(id, title, genre, rating, rating_count, imdb_id)`, `rating(profile_id, movie_id, score)` and
+> `watch_history(profile_id, movie_id)`. Differences:
+> - `profile.name` and `avatar_color` replace `display_name` and `max_age_rating` (BR2 is not built).
+> - `movie.genre` is a text column; there are no `genre` / `movie_genre` tables.
+> - `movie.rating` and `movie.rating_count` come from the IMDb snapshot of 2026-10-18, not from SmartCine ratings.
+> - `age_rating` and `release_year` are not built, so BR2 and the release-year tie-break of BR9 are not enforced.
+> - `watch_session` and `watch_event` are not built (the streaming integration is a mock).
+
 ## Business rules
 
 | BR | Data | Enforced by |
 |----|------|-------------|
 | BR1 | watch_history | Query: exclude rows in watch_history. Row written on manual mark, or on partner progress ≥ 90% |
-| BR2 | movie.age_rating, profile.max_age_rating | Query: `age_rating <= max_age_rating` |
+| BR2 | movie.age_rating, profile.max_age_rating | Query: `age_rating <= max_age_rating` *(not built in M3)* |
 | BR3 | — | Code: `LIMIT 10` |
 | BR4 | movie.avg_rating | Query: ≥ 6.0, personalized pool only |
 | BR5 | rating + watch_history | Query: count distinct movies ≥ 5 |
 | BR6 | movie | Code path when BR5 fails |
 | BR7 | — | Code: dedupe in Assembler |
 | BR8 | movie.rating_count | Query: ≥ 100, cold-start pool only |
-| BR9 | movie.rating_count, release_year | `ORDER BY score, rating_count DESC, release_year DESC` |
+| BR9 | movie.rating_count, release_year | `ORDER BY score, rating_count DESC, release_year DESC` *(M3: ordered by rating then vote count; no `release_year` yet)* |
 | BR10 | profile.account_id · rating/watch_history keyed by profile_id | FK; service rejects companion from another account |
 
 ## User story → tables
@@ -203,10 +213,10 @@
 |----|--------|
 | US01 | movie, rating, watch_history |
 | US02 | rating |
-| US03 | rating, movie, movie_genre |
-| US04 | watch_history, watch_session, watch_event |
+| US03 | rating, movie |
+| US04 | watch_history |
 | US05 | profile, rating |
-| US06 | genre, movie_genre |
+| US06 | movie |
 | US07 | movie |
 | US08 | — (code) |
 | US09 | rating, watch_history |
@@ -219,12 +229,12 @@
 | Method | Path | Input | Success | Errors |
 |---|---|---|---|---|
 | **POST** | `/api/v1/auth/login` | `email`, `password` | **200** · `access_token` (JWT), list of profiles | **400** missing required credentials<br>**401** invalid email or password *(US01, US10)* |
-| **GET** | `/api/v1/profiles` | *Header:* `Authorization: Bearer <access_token>` | **200** · list of profiles belonging to the account (`id`, `display_name`, `max_age_rating`) | **401** unauthorized account token *(US10)* |
-| **POST** | `/api/v1/profiles/select` | *Header:* `Authorization: Bearer <access_token>`<br>`profile_id` | **200** · `active_profile_id`, `redirectTo: "/recommendations"` | **401** unauthorized account token<br>**404** profile not found or does not belong to account *(US10, BR10)* |
-| **GET** | `/api/v1/recommendations/setup/genres` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>` | **200** · list of available genres/themes (e.g., Action, Horror) | **401** missing or invalid JWT<br>**403** missing or invalid `X-Profile-Id` header *(US06)* |
-| **GET** | `/api/v1/recommendations` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>`<br>*Query:* `genre_id` *(optional)*, `companion_profile_id` *(optional — triggers the ratio-merge in US05; must belong to the same account as BR10 requires)* | **200** · list of 10 unique movies (personalized, cold-start, or merged if `companion_profile_id` is present) | **401** unauthorized JWT<br>**403** missing active profile header<br>**404** `companion_profile_id` not found or belongs to another account (BR10)<br>**422** invalid `genre_id` query parameter *(US01, US03, US05; BR1–BR10)* |
-| **POST** | `/api/v1/ratings` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>`<br>`movie_id`, `score` (1-10) | **201** · rating created or updated (upsert) | **400** score outside 1-10 range<br>**401** unauthorized<br>**404** movie_id not found *(US02)* |
-| **POST** | `/api/v1/movies/:id/watch` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>` | **200** · movie marked as watched manually in `watch_history` | **401** unauthorized<br>**404** movie ID not found in database *(US04, BR1)* |
+| **GET** | `/api/v1/profiles` | *Header:* `Authorization: Bearer <access_token>` | **200** · list of profiles in the account (`id`, `name`, `avatar_color`) | **401** missing, invalid or expired token *(US10)* |
+| **POST** | `/api/v1/profiles/select` | *Header:* `Authorization: Bearer <access_token>`<br>`profile_id` | **200** · the selected profile (`id`, `name`, `avatar_color`) | **400** `profile_id` missing<br>**401** unauthorized account token<br>**404** profile not found in this account *(US10, BR10)* |
+| **GET** | `/api/v1/recommendations/setup/genres` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>` | **200** · list of genres (`id`, `name`), for example Horror, Romance, Thriller | **400** `X-Profile-Id` missing or not a number<br>**401** missing or invalid JWT<br>**404** profile not in this account *(US06, BR10)* |
+| **GET** | `/api/v1/recommendations` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>`<br>*Query:* `genre_id` *(optional)*, `companion_profile_id` *(optional, not built in M3 — US05)* | **200** · up to 10 unique movies (`id`, `title`, `genre`, `rating`, `rating_count`, `imdb_id`). Response header `X-Recommendation-Mode` is `cold-start` (profile has fewer than 5 rated or watched movies; `genre_id` is ignored) or `personalized` (genre filter applied; genres the profile rates highest come first). An unknown `genre_id` returns an empty list. | **400** / **404** profile header problems as above<br>**401** unauthorized JWT<br>**503** `detail.code = COLD_START_UNAVAILABLE` — fewer than 10 movies have at least 100 ratings *(US01, US03, US06; BR1, BR3–BR6, BR8)* |
+| **POST** | `/api/v1/ratings` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>`<br>`movie_id`, `score` (1-10) | **201** · rating created or updated (upsert); the movie is also added to `watch_history` | **400** score outside 1-10<br>**401** unauthorized<br>**404** movie not found *(US02, BR1)* |
+| **POST** | `/api/v1/movies/:id/watch` | *Header:* `Authorization: Bearer <access_token>`, `X-Profile-Id: <profile_id>` | **200** · movie marked as watched; calling it again changes nothing | **401** unauthorized<br>**404** movie not found *(US04, BR1)* |
 
 #### Partner Callback API (External Streaming Integration)
 
@@ -234,19 +244,22 @@
 
 # Walking skeleton
 
-**Route:** `GET /recommendations` · **Table:** `movie` (12 rows seeded from `data/movies.csv`)
+**Route:** `GET /api/v1/recommendations` · **Table:** `movie` (30 rows seeded from `data/movies.csv` by `python init_db.py`)
 
-**How to know it worked:** `http://localhost:5000/recommendations` shows an HTML table listing 10 movies (title, genre, rating), read live from the SQLite database — not hardcoded in the route.
+**How to know it worked:** sign in at `http://localhost:5000/` with the demo account, choose a profile, and press **Get recommendations**. The page lists 10 movies with title, genre, IMDb rating and IMDb votes, read live from the SQLite database — not hardcoded in the route.
 
 ![Walking skeleton running](images/walking-skeleton.png)
 
-**The query behind the page:**
+**The query behind the page** (cold-start mode, simplified):
 
 ```sql
-SELECT id, title, genre, rating FROM movie ORDER BY id LIMIT 10;
+SELECT id, title, genre, rating, rating_count, imdb_id
+FROM movie
+WHERE rating_count >= 100
+  AND NOT EXISTS (SELECT 1 FROM watch_history w WHERE w.profile_id = ? AND w.movie_id = movie.id)
+ORDER BY rating DESC, rating_count DESC, id
+LIMIT 10;
 ```
-
-No business rules (BR1–BR10) are applied yet at this stage — this route will be extended with filtering, personalization, and cold-start logic in Sprint 3/4, on top of this same working route.
 
 # Design decisions
 
@@ -254,9 +267,10 @@ No business rules (BR1–BR10) are applied yet at this stage — this route will
 
 **Options:** SQLite (single file, no setup) · PostgreSQL via Docker · PostgreSQL installed directly on the machine.
 
-**Chose:** SQLite, with in-memory caching via a `Cache adapter`. The Container diagram above shows the target architecture; migration happens gradually from Sprint 3.
+**Chose:** The Container diagram above shows the target architecture; migration happens gradually from Sprint 3.
 
-**Why:** The instructor clones and runs the project via SETUP.md in 15 minutes. PostgreSQL + Redis require Docker or separate installation plus connection strings — the most likely point of failure in that first step. Schema is written in SQLAlchemy without Postgres-specific types (`citext`, native `uuid`), so switching DB later is just a connection-string change; `PRAGMA foreign_keys=ON` makes SQLite enforce FK/CASCADE the same way Postgres does. The mock Streaming Site runs as a route in the same app (`/mock-partner`), so no second container is needed yet.
+**Why:** The instructor clones and runs the project via SETUP.md in 15 minutes. PostgreSQL + Redis require Docker or separate installation plus connection strings — the most likely point of failure in that first step. The schema is created with plain SQL in `init_db.py` and uses no Postgres-specific types (`citext`, native `uuid`); every query goes through `get_conn()` in `auth.py`, so moving to another database later means changing one function and the SQL dialect.
+The mock Streaming Site runs as a route in the same app (`/mock-partner`), so no second container is needed yet.(planned)
 
 **What would change our mind:** Concurrent writes from multiple real users, or measuring `/recommendations` slower than our latency target without an out-of-process cache.
 
@@ -266,7 +280,8 @@ No business rules (BR1–BR10) are applied yet at this stage — this route will
 
 **Options:** One FastAPI app with Services as internal modules (function calls) · Each domain (Auth, Profile, Recommendation, Rating, Watch) as a separate microservice communicating over the network.
 
-**Chose:** Auth, Profile, Rating, Watch, and Recommendation as modules inside one process, under `app/<module>/`.
+**Chose:** One FastAPI process. In M3 the modules are `auth.py` and `profiles.py` (routers) plus the recommendation, rating and watch routes in `app.py`.
+
 
 **Why:** A 4-person team, one semester, no current need to scale any part independently. No network hop between modules means simpler debugging and testing within a single process, while the module boundaries stay clean enough to split out later if needed.
 
@@ -294,6 +309,16 @@ No business rules (BR1–BR10) are applied yet at this stage — this route will
 **Why:** BR1 requires `watch_history` to update automatically from partner playback data. A webhook delivers updates in real time without the resource cost of repeated polling, and the HMAC signature confirms the request really came from the partner and wasn't tampered with.
 
 **What would change our mind:** Traffic spiking high enough that incoming webhook calls would need to be queued (e.g. via Kafka/RabbitMQ) before hitting the database, instead of being written directly.
+
+### ADR-5: React built to static files served by FastAPI
+
+**Options:** FastAPI with server-rendered templates · React running on its own dev server with CORS to FastAPI · React built to static files that FastAPI itself serves.
+
+**Chose:** React (Vite) built to `frontend/dist`, mounted by FastAPI after all API routes. The browser uses hash URLs (`#/profiles`).
+
+**Why:** One process and one port (`python app.py`) keeps SETUP.md short, avoids CORS, and the instructor only needs `npm run build` once. Hash URLs are needed because the static file mount has no fallback for deep links.
+
+**What would change our mind:** Needing server-side rendering for SEO, or deploying the frontend separately from the API; then a separate host and clean URLs would replace the static mount.
 
 
 # What changed since M1
@@ -424,3 +449,4 @@ Added so the project still has 10 user stories after merging the two cold-start 
 | `docs/requirements.md` §6 | Add `/profiles`; update flow diagram |
 | `docs/traceability.md` | Add `/profiles` row |
 | Implementation | Add `POST /api/watch-events` and a mock external-site service for the demo |
+Changes made in Sprint 3 (stack, schema, API, error codes) are listed in [`ui.md`](ui.md) §4.

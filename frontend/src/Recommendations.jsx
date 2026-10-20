@@ -80,7 +80,7 @@ export default function Recommendations({ token, profileId }) {
   return (
     <div>
       <h1>
-        {state.mode === "cold-start" ? "Trending recommendations" : "Recommendations"}
+        {state.mode === "cold-start" ? "Trending recommendations" : "Picked for you"}
         {state.mode !== "cold-start" && genreId ? `: ${genreId}` : ""}
       </h1>
       <p><Link to="/recommendations/setup">Change genre</Link></p>
