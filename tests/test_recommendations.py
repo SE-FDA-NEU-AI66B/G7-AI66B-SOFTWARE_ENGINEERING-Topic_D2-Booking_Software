@@ -294,3 +294,21 @@ def test_watched_movies_never_reappear_even_after_many_are_watched(client):
     conn.close()
     res = client.get("/api/v1/recommendations?genre_id=Thriller", headers=headers)
     assert all(m["id"] < 100 for m in res.json())  # BR1
+
+
+
+def test_personalized_list_prefers_genre_with_highest_average_rating(client):
+    headers = auth_headers(client)
+    pid = int(headers["X-Profile-Id"])
+    conn = auth.get_conn()
+    # 5 ratings: Horror movies rated high, Romance rated low
+    conn.executemany(
+        "INSERT INTO rating (profile_id, movie_id, score) VALUES (?, ?, ?)",
+        [(pid, 5, 10), (pid, 6, 10), (pid, 7, 9), (pid, 2, 3), (pid, 4, 2)],
+    )
+    conn.commit()
+    conn.close()
+    res = client.get("/api/v1/recommendations", headers=headers)
+    genres = [m["genre"] for m in res.json()]
+    assert res.headers["X-Recommendation-Mode"] == "personalized"
+    assert genres[0] == "Horror"

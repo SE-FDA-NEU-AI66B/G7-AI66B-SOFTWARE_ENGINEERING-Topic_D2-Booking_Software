@@ -149,9 +149,17 @@ def recommendations(
             if genre_id:
                 query += " AND genre = ?"
                 params = (_profile_id, genre_id)
-            query += " ORDER BY id LIMIT 10"  # BR3
-            rows = conn.execute(query, params).fetchall()
+
+            query += (
+                " ORDER BY (SELECT COALESCE(AVG(r.score), 0) FROM rating r "
+                "JOIN movie m2 ON m2.id = r.movie_id "
+                "WHERE r.profile_id = ? AND m2.genre = movie.genre) DESC, "
+                "rating DESC, rating_count DESC, id LIMIT 10"  # BR3, BR9 (partial)
+            )
+            params = (*params, _profile_id)
+            rows = conn.execute(query, params).fetchall()    
             response.headers["X-Recommendation-Mode"] = "personalized"
+            
     finally:
         conn.close()
     return [dict(r) for r in rows]
