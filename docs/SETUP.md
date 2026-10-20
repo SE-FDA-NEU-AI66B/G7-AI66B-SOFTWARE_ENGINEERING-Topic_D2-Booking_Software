@@ -15,8 +15,8 @@ Nothing else needs to be pre-installed.
 
 **macOS / Linux:**
 ```bash
-git clone https://github.com/<org>/<repo>.git
-cd <repo>
+git clone https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software.git
+cd G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -24,10 +24,10 @@ pip install -r requirements.txt
 
 **Windows:**
 ```powershell
-git clone https://github.com/<org>/<repo>.git
-cd <repo>
+git clone https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software.git
+cd G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
@@ -74,8 +74,9 @@ The API documentation is at http://localhost:5000/docs.
 **It worked if:**
 1. You see the SmartCine sign-in page.
 2. Signing in with the [test account](#test-account) shows "Who's watching?" with two profiles, Alex and Sam.
-3. Choosing a profile opens "What are you in the mood for?" with three genres: Horror, Romance and Thriller. Choose a genre for personalized recommendations, or press **Get recommendations** for the cold-start list. The demo account has no ratings yet, so either button shows the cold-start list: ten most-voted movies with at least 100 IMDb votes (the genre choice only applies once a profile has five or more rated or watched movies).
-4. Signing in with a wrong password shows "The email or password is incorrect."
+3. Choosing a profile opens "What are you in the mood for?" with three genres: Horror, Romance and Thriller. Pick a genre and press **Continue** (or press **Get recommendations**). The demo account has no ratings yet, so you see "Trending recommendations": ten movies, each with at least 100 IMDb votes, from every genre. The genre choice only applies once a profile has rated or watched 5 or more movies.
+4. Click a movie title. The detail page opens. Choose a rating from 1 to 10 and press **Save rating**; you see "Your rating has been saved."
+5. Press **Back to recommendations**. The movie you rated is no longer in the list.
 
 ## 6. Troubleshooting
 
@@ -89,7 +90,7 @@ The API documentation is at http://localhost:5000/docs.
 | The page is blank, shows an old version, or says "We can't reach the server" after signing in | The frontend build is outdated. Run `npm run build` inside `frontend/`, then hard-refresh the browser (Ctrl+F5, or Cmd+Shift+R on macOS). |
 | Sign-in fails with the test account | Run `python init_db.py` again to restore the test account, then restart `python app.py`. |
 | `ModuleNotFoundError: No module named 'auth'` when running `pytest` | Run `pytest` from the project root (the folder containing `app.py` and `pytest.ini`) with the virtual environment active. |
-
+| `running scripts is disabled on this system` (Windows PowerShell) | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, answer `Y`, then run the `Activate.ps1` command again. |
 ## 7. Test account
 
 | Email | Password | Profiles |
@@ -101,6 +102,7 @@ Created by `python init_db.py`. For local testing only; these are fake credentia
 ## 8. Run the checks (optional)
 
 ```bash
+pip install ruff
 ruff check .
 pytest
 cd frontend
@@ -111,4 +113,4 @@ npm run build
 ## 9. Tested by
 
 - @th3dummyking (Team 07) on a fresh Windows machine, 4/10/2026, took 15 minutes.
-- <name> on <OS>, <date>, <duration>, Sprint 3 (sign-in and profile selection).
+- @phuonglinhtla on Windows, 10/19/2026, took 20 minutes, Sprint 3 (sign-in and profile selection).
