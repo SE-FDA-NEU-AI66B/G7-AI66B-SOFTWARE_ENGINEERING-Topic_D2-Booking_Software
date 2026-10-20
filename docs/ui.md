@@ -206,3 +206,61 @@ Error:            the message from section 3, with a link back to the list
 Saving a rating also marks the movie as watched, so it does not come back in the next list.
  
 ---
+
+## 3. Error messages
+ 
+Users never see status codes, raw API text or stack traces. Each row is the exact text shown on screen.
+ 
+| Where | API error | Rule | Message shown to the user |
+|---|---|---|---|
+| Sign in | `400` email or password empty | — | Enter your email and password. |
+| Sign in | `401` wrong credentials | — | The email or password is incorrect. Check both and try again. |
+| Who's watching? | `404` profile not in this account | BR10 | That profile is not part of this account. Reload the page and try again. |
+| Who's watching? | server unreachable or `5xx` while choosing | — | Can't reach the server. Check that it is running, then try again. |
+| Who's watching? | request failed while loading profiles | — | We can't load your profiles. |
+| Genre picker | request failed while loading genres | — | We can't load the genres. |
+| Recommendations | server unreachable or `5xx` | — | We can't reach the server. |
+| Recommendations | `503` `COLD_START_UNAVAILABLE` | BR8 | No movies currently qualify for the cold-start list (at least 100 ratings). |
+| Recommendations | `200` with an empty list for a genre | BR4 | No movies found for "{genre}". |
+| Movie detail | `400` score outside 1–10 | US02 | Rating must be between 1 and 10. |
+| Movie detail | `404` movie not found | — | Movie not found. |
+| Movie detail | server unreachable while saving or marking | — | We can't reach the server. Check your connection and try again. |
+ 
+When the session has expired or is missing (`401`), the app returns the user to the sign-in screen. When no profile is chosen (`400`), the app sends the user to Who's watching?.
+ 
+---
+ 
+## 4. What changed since M2
+ 
+`docs/designs.md` is updated in the same PR (see the rows marked in the last column).
+ 
+| # | Area | M2 design | What was built | Why | designs.md |
+|---|---|---|---|---|---|
+| 1 | Stack | Flask starter | FastAPI JSON API plus a React/Vite app built to `frontend/dist` and served by FastAPI | Matches the architecture and API table; one command runs everything | ADR-5 added |
+| 2 | URLs | Path routes | Hash routes (`#/profiles`) | The static file server has no fallback for deep links | Walking-skeleton note |
+| 3 | Profile fields | `display_name`, `max_age_rating` | `name`, `avatar_color` | The picker needs an avatar; age rating (BR2) is not built | API table, data model note |
+| 4 | Profile select | Returns `active_profile_id` and `redirectTo` | Returns the selected profile (`id`, `name`, `avatar_color`) | The UI stores the whole profile in the session | API table |
+| 5 | Profile header errors | `403` missing or invalid `X-Profile-Id` | `400` missing or malformed, `404` profile not in the account | `403` means "not allowed"; the real problems are a bad request and an unknown profile (BR10) | API table |
+| 6 | Genres | `genre` and `movie_genre` tables | One `genre` text column on `movie` | Each seeded movie has one genre; enough for US06 | Data model note |
+| 7 | Unknown genre | `422` | `200` with an empty list | The user sees "No movies found" instead of a failure | API table |
+| 8 | Seed data | At least 10 rows | 30 movies, 10 per genre, with IMDb votes and IMDb id | Cold-start and the genre filter need enough rows | Walking skeleton |
+| 9 | Vote counts | `rating_count` from SmartCine users | `movie.rating_count` is the IMDb vote count (snapshot 2026-10-18) | The cold-start pool (BR8) must work before anyone has rated | Data model note |
+| 10 | Schema | `movie(avg_rating, release_year, age_rating)` | `movie(id, title, genre, rating, rating_count, imdb_id)`, plus `rating` and `watch_history` | Smaller schema for the sprint; BR2 and BR9's year tie-break are not built | Data model note |
+| 11 | Cold-start | Part of `GET /recommendations` | Response header `X-Recommendation-Mode`; `genre_id` is ignored in this mode | Cold-start is a trending list for everyone | API table |
+| 12 | Cold-start failure | Not specified | `503` with `detail.code = COLD_START_UNAVAILABLE` when fewer than 10 movies qualify | It is a data problem, not a missing route | API table |
+| 13 | Personalized order | Weighted by genre tags | Genres the profile rates highest come first, then IMDb rating, then vote count | Simple ranking that works with one genre per movie | API table |
+| 14 | Movie detail | Not in the API table | `GET /api/v1/movies/:id` returns the movie, the profile's `user_rating` and `watched` | The detail screen needs all three | API table |
+| 15 | Ratings | `201`, upsert | `201`, upsert; also marks the movie watched | A rated movie counts as watched (BR1) | API table |
+| 16 | Mark watched | `200`, `404` | Same; marking twice is harmless | Idempotent by design | API table |
+| 17 | Config | — | `.env` is loaded automatically (`python-dotenv`) | Fresh clones run without exporting variables | SETUP.md |
+ 
+### Not built yet
+ 
+| Item | Reason |
+|---|---|
+| Companion profile (`companion_profile_id`, US05) | P1, next sprint |
+| Age rating limit (BR2) | No age column in the data yet |
+| Release-year tie-break (BR9) | No release-year column yet |
+| Partner watch callback (`/callback/watch-event`) | Streaming integration is a mock |
+| Landing page `/` and `/profile/ratings` | Not started |
+| Re-watch suggestion (US09), duplicate and low-quality filters as separate stories (US07, US08) | P1/P2; the list is already unique and filtered |
