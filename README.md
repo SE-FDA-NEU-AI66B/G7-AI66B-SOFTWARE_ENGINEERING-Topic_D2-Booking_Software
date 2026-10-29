@@ -6,7 +6,7 @@ SmartCine is a movie recommendation web app that answers "what should I watch ne
 
 | Name | GitHub username | Role |
 | --- | --- | --- |
-| Hoang Thi Phuong Linh | phuonglinhtla | Member |
+| Hoang Thi Phuong Linh | PhuongLinhtla | Member |
 | Nguyen Quang Huy | KatsuroHuy | Product Owner |
 | Nguyen Vinh Hung | Nvhwng | Member |
 | Be Thanh Dat | th3dummyking | Member |
