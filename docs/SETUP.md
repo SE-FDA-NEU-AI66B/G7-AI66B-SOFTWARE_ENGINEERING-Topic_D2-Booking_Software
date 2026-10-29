@@ -56,9 +56,9 @@ No values need to be changed — the defaults (`DB_PATH=data/smartcine.db`,`PORT
 python init_db.py
 ```
 
-This creates `data/smartcine.db` and seeds it with **30 movies** from `data/movies.csv`, plus one test account with two profiles (see [Test account](#test-account)). You should see:
+This creates `data/smartcine.db` and seeds it with **42 movies** from `data/movies.csv`, plus one test account with two profiles (see [Test account](#test-account)). You should see:
 ```
-Seeded 30 movies from data/movies.csv into data/smartcine.db
+Seeded 42 movies from data/movies.csv into data/smartcine.db
 ```
 Movie titles, IMDb average ratings, vote counts, and IMDb IDs in the CSV are sourced from the [IMDb non-commercial datasets](https://developer.imdb.com/non-commercial-datasets/). The checked-in values are a snapshot retrieved on 2026-10-18; the IMDb dataset is provided for non-commercial use only.
 
