@@ -244,7 +244,7 @@
 
 # Walking skeleton
 
-**Route:** `GET /api/v1/recommendations` · **Table:** `movie` (30 rows seeded from `data/movies.csv` by `python init_db.py`)
+**Route:** `GET /api/v1/recommendations` · **Table:** `movie` (42 rows seeded from `data/movies.csv` by `python init_db.py`)
 
 **How to know it worked:** sign in at `http://localhost:5000/` with the demo account, choose a profile, and press **Get recommendations**. The page lists 10 movies with title, genre, IMDb rating and IMDb votes, read live from the SQLite database — not hardcoded in the route.
 
