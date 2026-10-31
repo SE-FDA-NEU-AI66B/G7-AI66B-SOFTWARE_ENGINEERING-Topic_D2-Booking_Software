@@ -1,4 +1,6 @@
 import auth
+
+
 def stranger_profile_id():
     conn = auth.get_conn()
     pid = conn.execute("SELECT id FROM profile WHERE name = 'Stranger'").fetchone()["id"]

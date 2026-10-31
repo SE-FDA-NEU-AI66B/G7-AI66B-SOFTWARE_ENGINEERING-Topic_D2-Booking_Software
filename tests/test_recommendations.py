@@ -1,5 +1,6 @@
-import auth
 from conftest import add_preferences
+
+import auth
 
 
 def test_genres_requires_token(client):
