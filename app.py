@@ -133,7 +133,7 @@ def recommendations(
                 params = (*params, genre_id)
             query += "ORDER BY rating DESC, rating_count DESC, id LIMIT 10"
             rows = conn.execute(query, params).fetchall()
-            if len(rows) < 10:
+            if len(rows) < 10 and not genre_id:
                 raise HTTPException(
                     status_code=503,
                     detail={

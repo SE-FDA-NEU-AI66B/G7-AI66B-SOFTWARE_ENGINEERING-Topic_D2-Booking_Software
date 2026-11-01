@@ -99,16 +99,12 @@ The API documentation is at http://localhost:5000/docs.
 
 Created by `python init_db.py`. For local testing only; these are fake credentials.
 
-## 8. Run the checks (optional)
+## 8. Run the checks
 
 ```bash
-pip install ruff
-ruff check .
-pytest
-cd frontend
-npm run lint
-npm run build
+python -m pytest -v
 ```
+All tests should pass. They use a temporary database and no running server. Optional extra checks: `pip install ruff`, then `ruff check .`; in `frontend/`, run `npm run lint`.
 
 ## 9. Tested by
 
