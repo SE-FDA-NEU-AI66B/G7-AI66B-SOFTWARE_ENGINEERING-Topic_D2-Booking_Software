@@ -1,5 +1,8 @@
 """Shared fixtures for API tests."""
 
+import csv
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -69,6 +72,33 @@ def client(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
+def seeded_client(client):
+    """Provide a client seeded with the application's complete movie dataset."""
+    csv_path = Path(__file__).resolve().parents[1] / "data" / "movies.csv"
+    with csv_path.open(newline="", encoding="utf-8") as movies_file:
+        movies = [
+            (
+                int(row["id"]),
+                row["title"],
+                row["genre"],
+                float(row["rating"]),
+                int(row["rating_count"]),
+                row["imdb_id"],
+            )
+            for row in csv.DictReader(movies_file)
+        ]
+
+    conn = auth.get_conn()
+    try:
+        conn.execute("DELETE FROM movie")
+        conn.executemany("INSERT INTO movie VALUES (?, ?, ?, ?, ?, ?)", movies)
+        conn.commit()
+    finally:
+        conn.close()
+    return client
+
+
+@pytest.fixture()
 def auth_headers(client):
     """Return bearer and selected-profile headers for the seeded demo account."""
     token = client.post(
@@ -81,22 +111,26 @@ def auth_headers(client):
     return {"Authorization": f"Bearer {token}", "X-Profile-Id": str(profile_id)}
 
 
-def add_preferences(headers, *, ratings=5, watched=0):
-    """Insert ratings and watch history for the profile in the supplied headers."""
-    profile_id = int(headers["X-Profile-Id"])
-    conn = auth.get_conn()
-    try:
-        conn.executemany(
-            "INSERT INTO rating (profile_id, movie_id, score) VALUES (?, ?, ?)",
-            [(profile_id, movie_id, 8) for movie_id in range(1, ratings + 1)],
-        )
-        conn.executemany(
-            "INSERT INTO watch_history (profile_id, movie_id) VALUES (?, ?)",
-            [
-                (profile_id, movie_id)
-                for movie_id in range(ratings + 1, ratings + watched + 1)
-            ],
-        )
-        conn.commit()
-    finally:
-        conn.close()
+@pytest.fixture()
+def add_preferences():
+    """Provide a helper to add ratings and watch history for a profile."""
+    def _add_preferences(headers, *, ratings=5, watched=0):
+        profile_id = int(headers["X-Profile-Id"])
+        conn = auth.get_conn()
+        try:
+            conn.executemany(
+                "INSERT INTO rating (profile_id, movie_id, score) VALUES (?, ?, ?)",
+                [(profile_id, movie_id, 8) for movie_id in range(1, ratings + 1)],
+            )
+            conn.executemany(
+                "INSERT INTO watch_history (profile_id, movie_id) VALUES (?, ?)",
+                [
+                    (profile_id, movie_id)
+                    for movie_id in range(ratings + 1, ratings + watched + 1)
+                ],
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    return _add_preferences

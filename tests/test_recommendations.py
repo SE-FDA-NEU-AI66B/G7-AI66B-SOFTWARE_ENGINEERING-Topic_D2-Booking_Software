@@ -1,5 +1,3 @@
-from conftest import add_preferences
-
 import auth
 
 
@@ -19,7 +17,9 @@ def test_genres_lists_each_genre_once(client, auth_headers):
     assert sorted(g["id"] for g in res.json()) == ["Horror", "Romance", "Thriller"]
 
 
-def test_recommendations_filtered_by_genre_returns_only_that_genre(client, auth_headers):
+def test_recommendations_filtered_by_genre_returns_only_that_genre(
+    client, auth_headers, add_preferences
+):
     headers = auth_headers
     add_preferences(headers)
     res = client.get(
@@ -41,7 +41,9 @@ def test_tc07_zero_preferences_returns_ten_qualified_cold_start_movies(
     assert res.headers["X-Recommendation-Mode"] == "cold-start"
 
 
-def test_recommendations_for_unknown_genre_returns_empty_list(client, auth_headers):
+def test_recommendations_for_unknown_genre_returns_empty_list(
+    client, auth_headers, add_preferences
+):
     headers = auth_headers
     add_preferences(headers)
     res = client.get(
@@ -52,7 +54,7 @@ def test_recommendations_for_unknown_genre_returns_empty_list(client, auth_heade
 
 
 def test_tc14_more_than_ten_qualifying_movies_returns_exactly_ten(
-    client, auth_headers
+    client, auth_headers, add_preferences
 ):
     headers = auth_headers
     # The fixture has 12 candidates; one watched movie still leaves 11.
@@ -65,7 +67,7 @@ def test_tc14_more_than_ten_qualifying_movies_returns_exactly_ten(
 
 
 def test_tc15_personalized_rating_boundary_excludes_5_9_and_keeps_6_0(
-    client, auth_headers
+    client, auth_headers, add_preferences
 ):
     headers = auth_headers
     add_preferences(headers)
@@ -116,7 +118,9 @@ def test_rating_outside_one_to_ten_returns_clear_validation_message(client, auth
     assert res.json()["detail"] == "Rating must be between 1 and 10."
 
 
-def test_marking_movie_watched_excludes_it_from_recommendations(client, auth_headers):
+def test_marking_movie_watched_excludes_it_from_recommendations(
+    client, auth_headers, add_preferences
+):
     headers = auth_headers
     add_preferences(headers, ratings=5)
 
@@ -130,7 +134,9 @@ def test_marking_movie_watched_excludes_it_from_recommendations(client, auth_hea
     assert 1 not in {item["id"] for item in recommendations.json()}
 
 
-def test_tc08_four_preferences_still_uses_cold_start(client, auth_headers):
+def test_tc08_four_preferences_still_uses_cold_start(
+    client, auth_headers, add_preferences
+):
     headers = auth_headers
     add_preferences(headers, ratings=3, watched=1)
 
@@ -145,7 +151,7 @@ def test_tc08_four_preferences_still_uses_cold_start(client, auth_headers):
 
 
 def test_tc12_exactly_five_preferences_uses_personalized_path(
-    client, auth_headers
+    client, auth_headers, add_preferences
 ):
     headers = auth_headers
     add_preferences(headers, ratings=4, watched=1)
@@ -186,11 +192,17 @@ def test_tc09_movie_with_99_votes_is_excluded_from_cold_start(
     assert "Parasite" not in [movie["title"] for movie in res.json()]
 
 
-def test_cold_start_ignores_genre_filter(client, auth_headers):
-    res = client.get("/api/v1/recommendations?genre_id=Horror", headers=auth_headers)
+def test_cold_start_returns_ten_movies_in_selected_genre(
+    seeded_client, auth_headers
+):
+    res = seeded_client.get(
+        "/api/v1/recommendations?genre_id=Horror", headers=auth_headers
+    )
     assert res.status_code == 200
     assert res.headers["X-Recommendation-Mode"] == "cold-start"
-    assert len(res.json()) == 10
+    movies = res.json()
+    assert len(movies) == 10
+    assert {movie["genre"] for movie in movies} == {"Horror"}
 
 
 def test_tc10_movie_with_exactly_100_votes_is_in_cold_start(client, auth_headers):

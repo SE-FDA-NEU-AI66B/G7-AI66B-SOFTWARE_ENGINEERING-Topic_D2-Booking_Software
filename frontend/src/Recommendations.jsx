@@ -80,14 +80,16 @@ export default function Recommendations({ token, profileId }) {
   return (
     <div>
       <h1>
-        {state.mode === "cold-start" ? "Trending recommendations" : "Picked for you"}
+        {state.mode === "cold-start"
+          ? `Trending${genreId ? ` ${genreId}` : ""} recommendations`
+          : "Picked for you"}
         {state.mode !== "cold-start" && genreId ? `: ${genreId}` : ""}
       </h1>
       <p><Link to="/recommendations/setup">Change genre</Link></p>
       {state.mode === "cold-start" && (
         <p className="muted">
           Rate or watch at least 5 movies to get picks matched to your taste.
-          Until then, these are the most-voted movies for everyone.
+          {` Until then, these are the most-voted${genreId ? ` ${genreId}` : ""} movies.`}
         </p>
       )}
       <table className="movie-table">

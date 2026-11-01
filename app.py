@@ -121,14 +121,18 @@ def recommendations(
         ).fetchone()[0]
 
         if preference_count < 5:  # BR5 / BR6
-            rows = conn.execute(
+            query = (
                 "SELECT id, title, genre, rating, rating_count, imdb_id FROM movie "
                 "WHERE rating_count >= 100 AND NOT EXISTS ("
                 "SELECT 1 FROM watch_history w "
                 "WHERE w.profile_id = ? AND w.movie_id = movie.id) "
-                "ORDER BY rating DESC, rating_count DESC, id LIMIT 10",
-                (_profile_id,),
-            ).fetchall()
+            )
+            params = (_profile_id,)
+            if genre_id:
+                query += "AND genre = ? "
+                params = (*params, genre_id)
+            query += "ORDER BY rating DESC, rating_count DESC, id LIMIT 10"
+            rows = conn.execute(query, params).fetchall()
             if len(rows) < 10:
                 raise HTTPException(
                     status_code=503,

@@ -74,7 +74,7 @@ The API documentation is at http://localhost:5000/docs.
 **It worked if:**
 1. You see the SmartCine sign-in page.
 2. Signing in with the [test account](#test-account) shows "Who's watching?" with two profiles, Alex and Sam.
-3. Choosing a profile opens "What are you in the mood for?" with three genres: Horror, Romance and Thriller. Pick a genre and press **Continue** (or press **Get recommendations**). The demo account has no ratings yet, so you see "Trending recommendations": ten movies, each with at least 100 IMDb votes, from every genre. The genre choice only applies once a profile has rated or watched 5 or more movies.
+3. Choosing a profile opens "What are you in the mood for?" with three genres: Horror, Romance and Thriller. Pick a genre and press **Continue** to see up to 10 qualifying movies in that genre, including in cold-start mode. **Get recommendations** skips the genre filter; with no preferences, it shows the overall trending list. Cold-start movies each have at least 100 IMDb votes.
 4. Click a movie title. The detail page opens. Choose a rating from 1 to 10 and press **Save rating**; you see "Your rating has been saved."
 5. Press **Back to recommendations**. The movie you rated is no longer in the list.
 
