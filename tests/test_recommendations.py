@@ -205,6 +205,14 @@ def test_cold_start_returns_ten_movies_in_selected_genre(
     assert {movie["genre"] for movie in movies} == {"Horror"}
 
 
+def test_cold_start_unknown_genre_returns_empty_list(seeded_client, auth_headers):
+    res = seeded_client.get(
+        "/api/v1/recommendations?genre_id=Western", headers=auth_headers
+    )
+    assert res.status_code == 200
+    assert res.json() == []
+
+
 def test_tc10_movie_with_exactly_100_votes_is_in_cold_start(client, auth_headers):
     conn = auth.get_conn()
     conn.execute("UPDATE movie SET rating_count = 100 WHERE title = 'Inception'")

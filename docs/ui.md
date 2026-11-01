@@ -243,7 +243,7 @@ When the session has expired or is missing (`401`), the app returns the user to 
 | 5 | Profile header errors | `403` missing or invalid `X-Profile-Id` | `400` missing or malformed, `404` profile not in the account | `403` means "not allowed"; the real problems are a bad request and an unknown profile (BR10) | API table |
 | 6 | Genres | `genre` and `movie_genre` tables | One `genre` text column on `movie` | Each seeded movie has one genre; enough for US06 | Data model note |
 | 7 | Unknown genre | `422` | `200` with an empty list | The user sees "No movies found" instead of a failure | API table |
-| 8 | Seed data | At least 10 rows | 30 movies, 10 per genre, with IMDb votes and IMDb id | Cold-start and the genre filter need enough rows | Walking skeleton |
+| 8 | Seed data | At least 10 rows | 42 movies, 14 per genre, with IMDb votes and IMDb id | Cold-start and the genre filter need enough rows | Walking skeleton |
 | 9 | Vote counts | `rating_count` from SmartCine users | `movie.rating_count` is the IMDb vote count (snapshot 2026-10-18) | The cold-start pool (BR8) must work before anyone has rated | Data model note |
 | 10 | Schema | `movie(avg_rating, release_year, age_rating)` | `movie(id, title, genre, rating, rating_count, imdb_id)`, plus `rating` and `watch_history` | Smaller schema for the sprint; BR2 and BR9's year tie-break are not built | Data model note |
 | 11 | Cold-start | Part of `GET /recommendations` | Response header `X-Recommendation-Mode`; an optional `genre_id` filters cold-start results too | Cold-start is a trending list, optionally limited to the selected genre | API table |

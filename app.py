@@ -21,53 +21,6 @@ class RatingRequest(BaseModel):
     score: int
 
 
-# ---------------------------------------------------------------------------
-# Shared helpers
-# ---------------------------------------------------------------------------
-
-MOVIE_COLUMNS = "id, title, genre, rating, rating_count, imdb_id"
-
-
-def movie_exists(conn, movie_id: int) -> bool:
-    row = conn.execute("SELECT 1 FROM movie WHERE id = ?", (movie_id,)).fetchone()
-    return row is not None
-
-
-def require_movie(conn, movie_id: int) -> None:
-    if not movie_exists(conn, movie_id):
-        raise HTTPException(status_code=404, detail="Movie not found.")
-
-
-def mark_watched(conn, profile_id: int, movie_id: int) -> None:
-    """Idempotent: marking the same movie twice does nothing the second time."""
-    conn.execute(
-        "INSERT OR IGNORE INTO watch_history (profile_id, movie_id) VALUES (?, ?)",
-        (profile_id, movie_id),
-    )
-
-
-def not_watched_clause() -> str:
-    """BR1: hide every movie this profile has watched (or rated).
-
-    Both recommendation queries below use this one clause. The query needs the
-    named parameter :profile_id, which is always supplied.
-
-    MUTATION CHECK (tests/test_ratings_watch.py): to prove the tests can fail,
-    make this function return "1 = 1", run pytest, then restore it. Nothing
-    else has to change, because parameters are named and extra ones are ignored.
-    """
-    # return "1=1"  ''' test xem nó trả lỗi bằng cách uncomment cái này'''
-    return (
-        "NOT EXISTS (SELECT 1 FROM watch_history w "
-        "WHERE w.profile_id = :profile_id AND w.movie_id = movie.id)"
-    )
-
-
-# ---------------------------------------------------------------------------
-# Movies, ratings, watch history
-# ---------------------------------------------------------------------------
-
-
 @app.get("/api/v1/movies/{movie_id}")
 def get_movie(movie_id: int, _profile_id: int = Depends(get_current_profile)):
     conn = get_conn()
@@ -99,13 +52,20 @@ def save_rating(body: RatingRequest, profile_id: int = Depends(get_current_profi
 
     conn = get_conn()
     try:
-        require_movie(conn, body.movie_id)
+        exists = conn.execute(
+            "SELECT 1 FROM movie WHERE id = ?", (body.movie_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Movie not found.")
         conn.execute(
             "INSERT INTO rating (profile_id, movie_id, score) VALUES (?, ?, ?) "
             "ON CONFLICT(profile_id, movie_id) DO UPDATE SET score = excluded.score",
             (profile_id, body.movie_id, body.score),
         )
-        mark_watched(conn, profile_id, body.movie_id)  # rating also marks watched
+        conn.execute(
+            "INSERT OR IGNORE INTO watch_history (profile_id, movie_id) VALUES (?, ?)",
+            (profile_id, body.movie_id),
+        )
         conn.commit()
     finally:
         conn.close()
@@ -116,17 +76,19 @@ def save_rating(body: RatingRequest, profile_id: int = Depends(get_current_profi
 def mark_movie_watched(movie_id: int, profile_id: int = Depends(get_current_profile)):
     conn = get_conn()
     try:
-        require_movie(conn, movie_id)
-        mark_watched(conn, profile_id, movie_id)
+        exists = conn.execute(
+            "SELECT 1 FROM movie WHERE id = ?", (movie_id,)
+        ).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Movie not found.")
+        conn.execute(
+            "INSERT OR IGNORE INTO watch_history (profile_id, movie_id) VALUES (?, ?)",
+            (profile_id, movie_id),
+        )
         conn.commit()
     finally:
         conn.close()
     return {"movie_id": movie_id, "watched": True}
-
-
-# ---------------------------------------------------------------------------
-# Recommendations
-# ---------------------------------------------------------------------------
 
 
 @app.get("/api/v1/recommendations/setup/genres")
@@ -142,49 +104,6 @@ def get_recommendation_genres(_profile_id: int = Depends(get_current_profile)):
     return [dict(r) for r in rows]
 
 
-def count_preferences(conn, profile_id: int) -> int:
-    return conn.execute(
-        "SELECT COUNT(*) FROM ("
-        "SELECT movie_id FROM rating WHERE profile_id = :profile_id "
-        "UNION SELECT movie_id FROM watch_history WHERE profile_id = :profile_id"
-        ")",
-        {"profile_id": profile_id},
-    ).fetchone()[0]
-
-
-def cold_start_recommendations(conn, profile_id: int, genre_id: str | None):
-    """BR5 / BR6: top-rated movies with at least 100 ratings, not yet watched."""
-    query = (
-        f"SELECT {MOVIE_COLUMNS} FROM movie "
-        f"WHERE rating_count >= 100 AND {not_watched_clause()}"
-    )
-    params = {"profile_id": profile_id}
-    if genre_id:
-        query += " AND genre = :genre_id"
-        params["genre_id"] = genre_id
-    query += " ORDER BY rating DESC, rating_count DESC, id LIMIT 10"
-    return conn.execute(query, params).fetchall()
-
-
-def personalized_recommendations(conn, profile_id: int, genre_id: str | None):
-    """BR3, BR4, BR9 (partial): good movies, favouring the profile's best genres."""
-    query = (
-        f"SELECT {MOVIE_COLUMNS} FROM movie "
-        f"WHERE rating >= 6.0 AND {not_watched_clause()}"  # BR4
-    )
-    params = {"profile_id": profile_id}
-    if genre_id:
-        query += " AND genre = :genre_id"
-        params["genre_id"] = genre_id
-    query += (
-        " ORDER BY (SELECT COALESCE(AVG(r.score), 0) FROM rating r "
-        "JOIN movie m2 ON m2.id = r.movie_id "
-        "WHERE r.profile_id = :profile_id AND m2.genre = movie.genre) DESC, "
-        "rating DESC, rating_count DESC, id LIMIT 10"  # BR3
-    )
-    return conn.execute(query, params).fetchall()
-
-
 @app.get("/api/v1/recommendations")
 def recommendations(
     response: Response,
@@ -193,9 +112,28 @@ def recommendations(
 ):
     conn = get_conn()
     try:
-        if count_preferences(conn, _profile_id) < 5:  # BR5 / BR6
-            rows = cold_start_recommendations(conn, _profile_id, genre_id)
-            if len(rows) < 10:
+        preference_count = conn.execute(
+            "SELECT COUNT(*) FROM ("
+            "SELECT movie_id FROM rating WHERE profile_id = ? "
+            "UNION SELECT movie_id FROM watch_history WHERE profile_id = ?"
+            ")",
+            (_profile_id, _profile_id),
+        ).fetchone()[0]
+
+        if preference_count < 5:  # BR5 / BR6
+            query = (
+                "SELECT id, title, genre, rating, rating_count, imdb_id FROM movie "
+                "WHERE rating_count >= 100 AND NOT EXISTS ("
+                "SELECT 1 FROM watch_history w "
+                "WHERE w.profile_id = ? AND w.movie_id = movie.id) "
+            )
+            params = (_profile_id,)
+            if genre_id:
+                query += "AND genre = ? "
+                params = (*params, genre_id)
+            query += "ORDER BY rating DESC, rating_count DESC, id LIMIT 10"
+            rows = conn.execute(query, params).fetchall()
+            if len(rows) < 10 and not genre_id:
                 raise HTTPException(
                     status_code=503,
                     detail={
@@ -205,8 +143,27 @@ def recommendations(
                 )
             response.headers["X-Recommendation-Mode"] = "cold-start"
         else:
-            rows = personalized_recommendations(conn, _profile_id, genre_id)
+            query = (
+                "SELECT id, title, genre, rating, rating_count, imdb_id "
+                "FROM movie WHERE rating >= 6.0 AND NOT EXISTS ("
+                "SELECT 1 FROM watch_history w "
+                "WHERE w.profile_id = ? AND w.movie_id = movie.id)"
+            )  # BR4
+            params = (_profile_id,)
+            if genre_id:
+                query += " AND genre = ?"
+                params = (_profile_id, genre_id)
+
+            query += (
+                " ORDER BY (SELECT COALESCE(AVG(r.score), 0) FROM rating r "
+                "JOIN movie m2 ON m2.id = r.movie_id "
+                "WHERE r.profile_id = ? AND m2.genre = movie.genre) DESC, "
+                "rating DESC, rating_count DESC, id LIMIT 10"  # BR3, BR9 (partial)
+            )
+            params = (*params, _profile_id)
+            rows = conn.execute(query, params).fetchall()    
             response.headers["X-Recommendation-Mode"] = "personalized"
+            
     finally:
         conn.close()
     return [dict(r) for r in rows]
