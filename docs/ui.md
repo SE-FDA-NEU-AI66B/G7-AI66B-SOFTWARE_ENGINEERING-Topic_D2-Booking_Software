@@ -5,7 +5,7 @@ Status reflects what is on `main` at submission time. "Works" means the user can
 | Story | Screen(s) | Route(s) | Status | Issue |
 |---|---|---|---|---|
 | US10 — Select a profile before watching | Sign in, Who's watching? | `/login` → `/profiles` | Works | [#32](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/32) |
-| US06 — Ask for a theme before recommending | Genre picker | `/recommendations/setup` | Partly works — the genre filter only applies once a profile has 5 or more rated or watched movies; the cold-start list ignores it | [#27](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/27), [#28](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/28) |
+| US06 — Ask for a theme before recommending | Genre picker | `/recommendations/setup` | Works — selected genre filters both cold-start and personalized recommendations | [#27](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/27), [#28](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/28) |
 | US01 — Cold-start recommendations | Recommendation list | `/recommendations` | Works | [#23](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/23) |
 | US03 — Personalized recommendations | Recommendation list | `/recommendations` | Works — genres the profile rates highest are listed first | [#25](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/25) |
 | US02 — Rate a watched movie | Movie detail | `/movie/:id` | Works | [#24](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/issues/24) |
@@ -246,7 +246,7 @@ When the session has expired or is missing (`401`), the app returns the user to 
 | 8 | Seed data | At least 10 rows | 30 movies, 10 per genre, with IMDb votes and IMDb id | Cold-start and the genre filter need enough rows | Walking skeleton |
 | 9 | Vote counts | `rating_count` from SmartCine users | `movie.rating_count` is the IMDb vote count (snapshot 2026-10-18) | The cold-start pool (BR8) must work before anyone has rated | Data model note |
 | 10 | Schema | `movie(avg_rating, release_year, age_rating)` | `movie(id, title, genre, rating, rating_count, imdb_id)`, plus `rating` and `watch_history` | Smaller schema for the sprint; BR2 and BR9's year tie-break are not built | Data model note |
-| 11 | Cold-start | Part of `GET /recommendations` | Response header `X-Recommendation-Mode`; `genre_id` is ignored in this mode | Cold-start is a trending list for everyone | API table |
+| 11 | Cold-start | Part of `GET /recommendations` | Response header `X-Recommendation-Mode`; an optional `genre_id` filters cold-start results too | Cold-start is a trending list, optionally limited to the selected genre | API table |
 | 12 | Cold-start failure | Not specified | `503` with `detail.code = COLD_START_UNAVAILABLE` when fewer than 10 movies qualify | It is a data problem, not a missing route | API table |
 | 13 | Personalized order | Weighted by genre tags | Genres the profile rates highest come first, then IMDb rating, then vote count | Simple ranking that works with one genre per movie | API table |
 | 14 | Movie detail | Not in the API table | `GET /api/v1/movies/:id` returns the movie, the profile's `user_rating` and `watched` | The detail screen needs all three | API table |

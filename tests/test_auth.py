@@ -1,17 +1,4 @@
-import pytest
-from fastapi.testclient import TestClient
-
 import auth
-from app import app
-
-
-@pytest.fixture()
-def client(tmp_path, monkeypatch):
-    monkeypatch.setenv("DB_PATH", str(tmp_path / "test.db"))
-    conn = auth.get_conn()
-    auth.ensure_schema_and_seed(conn)
-    conn.close()
-    return TestClient(app)
 
 
 def login(client, email, password):
