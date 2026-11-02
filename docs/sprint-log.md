@@ -91,8 +91,8 @@ Every P0 story is checked by automated tests that run with one command (`pytest`
 
 | Issue | Người làm | Đã đóng? |
 |-------|-----------|----------|
-| [Chore] Refine backlog for Sprint 4 (#99) | @KatsuroHuy (PO) | |
-| [Chore] Sprint 4 wrap-up (#109) | @phuonglinhtla (SM) | |
+| [Chore] Refine backlog for Sprint 4 (#99) | @KatsuroHuy (PO) |YES |
+| [Chore] Sprint 4 wrap-up (#109) | @phuonglinhtla (SM) |YES |
 
 ### Committed
 
@@ -116,39 +116,36 @@ Every P0 story is checked by automated tests that run with one command (`pytest`
 
 | Issue | Points | Status | If not done, why |
 |-------|--------|--------|------------------|
-| #99 | 1 | | |
-| #100 | 2 | | |
-| #101 | 2 | | |
-| #102 | 5 | | |
-| #103 | 5 | | |
-| #104 | 3 | | |
-| #105 | 2 | | |
-| #106 | 3 | | |
-| #107 | 5 | | |
-| #108 | 1 | | |
-| #109 | 1 | | |
+| #99 | 1 |DONE | |
+| #100 | 2 |DONE | |
+| #101 | 2 |DONE | |
+| #102 | 5 |DONE | |
+| #103 | 5 |DONE | |
+| #104 | 3 |DONE | |
+| #105 | 2 |DONE | |
+| #106 | 3 |DONE | |
+| #107 | 5 |DONE | |
+| #108 | 1 |DONE | |
+| #109 | 1 |DONE | |
 
-**Completed: __ points. Velocity this sprint: __**
+**Completed: 30 points. Velocity this sprint: 30**
 
 ### Sprint Review
 
-- What we demonstrated:
-- Feedback received:
-- Backlog changes as a result:
+- What we demonstrated:`python -m pytest -v` passes on a fresh clone; the cold-start genre bug (US06) was found by a test and fixed.
+- Feedback received: none yet
+- Backlog changes as a result: US05, US07, US08, US09 and the landing page `/` stay in the backlog for the next sprint.
 
 ### Retrospective
 
 | Keep doing | Stop doing | Start doing |
 |------------|------------|-------------|
-|            |            |             |
-
-**One concrete action for next sprint (with an owner):**
-
+**One concrete action for next sprint (with an owner):** 
 ### Attendance
 
 | Member | Planning | Review | Retro |
 |--------|----------|--------|-------|
-| @KatsuroHuy | | | |
-| @Nvhwng | | | |
-| @th3dummyking | | | |
-| @phuonglinhtla | | | |
+| @KatsuroHuy |YES | | |
+| @Nvhwng |YES | | |
+| @th3dummyking |YES | | |
+| @phuonglinhtla |YES| | |
