@@ -26,6 +26,7 @@ def db_path(tmp_path_factory):
         [sys.executable, "init_db.py"],
         cwd=ROOT,
         env=env,
+        check=False,
         capture_output=True,
         text=True,
         encoding="utf-8",

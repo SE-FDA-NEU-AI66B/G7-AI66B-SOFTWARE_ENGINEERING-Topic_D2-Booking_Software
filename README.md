@@ -1,6 +1,6 @@
 # SmartCine
 
-SmartCine is a movie recommendation web app that answers "what should I watch next?". Choose a profile, pick a genre, and get up to 10 movies. New profiles see trending movies right away; once a profile has rated or watched 5 movies, the list is ranked by the genres it rates highest and hides movies it has already watched.
+SmartCine is a movie recommendation web app that answers "what should I watch next?". Choose a profile, pick a genre, and get up to 10 movies. New profiles see the trending movies of the genre they pick; once a profile has rated or watched 5 movies, the list is ranked by the genres it rates highest and hides movies it has already watched.
 
 ## Team
 
@@ -26,6 +26,7 @@ cd G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software
 
 Then create a virtual environment, install the requirements, build the frontend, seed the database with `python init_db.py` and start the app with `python app.py`.
 
+Run the automated tests with `python -m pytest -v` (no running server or real database needed).
 
 ## Try it
 
@@ -38,7 +39,7 @@ Run the app with the [Setup guide](docs/SETUP.md), then open <http://localhost:5
 | Story | Where it starts |
 |---|---|
 | US10 — Select a profile before watching | Sign in at `/#/login`, then you land on `/#/profiles` |
-| US06 — Ask for a theme before recommending | `/#/recommendations/setup` (opens after choosing a profile) |
+| US06 — Ask for a theme before recommending | `/#/recommendations/setup` (opens after choosing a profile); pick a genre and press **Continue**. The genre applies to new and experienced profiles |
 | US01 — Cold-start recommendations | Press **Get recommendations** on the setup page (`/#/recommendations`) |
 | US03 — Personalized recommendations | Same page, after the profile has rated or watched 5 movies |
 | US02 — Rate a watched movie | Click a movie title in the list (`/#/movie/:id`) |

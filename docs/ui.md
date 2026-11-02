@@ -151,13 +151,14 @@ DATA (personalized)
  
 DATA (cold-start: fewer than 5 rated or watched movies)
 +----------------------------------------------------------+
-|  Trending recommendations                                |
+|  Trending Horror recommendations                         |
 |  Change genre                                            |
 |  Rate or watch at least 5 movies to get picks matched    |
 |  to your taste. Until then, these are the most-voted     |
-|  movies for everyone.                                    |
+|  Horror movies.                                          |
 |  (same table, exactly 10 rows, each with 100+ votes)     |
 +----------------------------------------------------------+
+Note: If the user did not pick a genre, the header reads "Trending recommendations" and the table shows the 10 most-voted movies overall.
  
 LOADING                         EMPTY
 +---------------------------+   +--------------------------------+
