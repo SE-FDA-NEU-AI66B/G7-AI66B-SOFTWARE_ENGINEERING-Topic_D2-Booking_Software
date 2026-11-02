@@ -110,3 +110,4 @@ All tests should pass. They use a temporary database and no running server. Opti
 
 - @th3dummyking (Team 07) on a fresh Windows machine, 4/10/2026, took 15 minutes.
 - @phuonglinhtla on Windows, 10/19/2026, took 20 minutes, Sprint 3 (sign-in and profile selection).
+- @phuonglinhtla on Windows, 11/2/2026, ran `python -m pytest -v` from a fresh clone, Sprint 4.
