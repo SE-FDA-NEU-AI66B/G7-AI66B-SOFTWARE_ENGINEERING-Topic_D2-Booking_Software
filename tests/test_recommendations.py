@@ -20,6 +20,7 @@ def test_genres_lists_each_genre_once(client, auth_headers):
 def test_recommendations_filtered_by_genre_returns_only_that_genre(
     client, auth_headers, add_preferences
 ):
+    #TC-32
     headers = auth_headers
     add_preferences(headers)
     res = client.get(
@@ -195,6 +196,7 @@ def test_tc09_movie_with_99_votes_is_excluded_from_cold_start(
 def test_cold_start_returns_ten_movies_in_selected_genre(
     seeded_client, auth_headers
 ):
+    # TC-33
     res = seeded_client.get(
         "/api/v1/recommendations?genre_id=Horror", headers=auth_headers
     )
@@ -206,6 +208,7 @@ def test_cold_start_returns_ten_movies_in_selected_genre(
 
 
 def test_cold_start_unknown_genre_returns_empty_list(seeded_client, auth_headers):
+    # TC-34
     res = seeded_client.get(
         "/api/v1/recommendations?genre_id=Western", headers=auth_headers
     )
