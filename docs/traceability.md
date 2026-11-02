@@ -9,7 +9,7 @@ update this file should not be approved.
 |---|---|---|---|---|---|---|---|
 | `/` | Landing page | G | P0 | F1 | — | TBD | Not started |
 | `/login` | Sign in with email and password | G | P0 | F1 | — | #91 | Done |
-| `/recommendations/setup` | Ask theme/topic and companion before generating list | U | P0 | F4 | #27, #28 | #91| Done |
+| `/recommendations/setup` | Ask theme/topic and companion before generating list | U | P0 | F4 | #27, #28 | #91 | Done |
 | `/recommendations` | Show personalized or cold-start movie list | U | P0 | F2 | #23, #25, #29, #30, #31, #32 | TBD | Done |
 | `/movie/:id` | Movie detail — view info, mark as watched, rate | U | P0 | F3 | #24, #26 | TBD | Done |
 | `/profile/ratings` | View and manage movies you've rated | U | P1 | F3 | — | TBD | Not started |
@@ -32,6 +32,6 @@ Numbered, so issues and tests can cite them.
 | BR5 | Personalized mode requires ≥5 rated/watched movies | /recommendations | test_tc08_four_preferences_still_uses_cold_start, test_tc12_exactly_five_preferences_uses_personalized_path |
 | BR6 | Cold-start uses trending/critically acclaimed movies | /recommendations | test_tc07_zero_preferences_returns_ten_qualified_cold_start_movies, test_cold_start_is_sorted_by_rating_then_vote_count |
 | BR7 | No duplicate movies in one result list | /recommendations | TBD |
-| BR8 | Min 100 ratings to qualify for cold-start pool | /recommendations | test_tc09_movie_with_99_votes_is_excluded_from_cold_start, test_tc10_movie_with_exactly_100_votes_is_in_cold_start |
+| BR8 | Min 100 ratings to qualify for cold-start pool | /recommendations | test_tc09_movie_with_99_votes_is_excluded_from_cold_start, test_tc10_movie_with_exactly_100_votes_is_in_cold_start, test_tc27_every_movie_has_at_least_100_votes |
 | BR9 | Tie-break by rating count then release year | /recommendations | TBD |
 | BR10 | A profile belongs to exactly one account; a joint session can only merge profiles from the same account | /profiles, `get_current_profile` in `auth.py` | test_tc03_selecting_a_profile_of_another_account_returns_404, test_tc06_one_profiles_ratings_do_not_change_another_profiles_list |

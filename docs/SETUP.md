@@ -91,6 +91,7 @@ The API documentation is at http://localhost:5000/docs.
 | Sign-in fails with the test account | Run `python init_db.py` again to restore the test account, then restart `python app.py`. |
 | `ModuleNotFoundError: No module named 'auth'` when running `pytest` | Run `pytest` from the project root (the folder containing `app.py` and `pytest.ini`) with the virtual environment active. |
 | `running scripts is disabled on this system` (Windows PowerShell) | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, answer `Y`, then run the `Activate.ps1` command again. |
+
 ## 7. Test account
 
 | Email | Password | Profiles |
