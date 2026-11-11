@@ -16,7 +16,7 @@ function RecommendationSetup({ session, onSignOut }) {
     fetch("/api/v1/recommendations/setup/genres", { headers: authHeaders(session) })
       .then((res) => {
         if (res.status === 401) {
-          onSignOut();
+          onSignOut("Your session has expired. Sign in again.");
           return null;
         }
         if (!res.ok) throw new Error();

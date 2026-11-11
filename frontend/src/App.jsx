@@ -10,17 +10,22 @@ import { loadSession, storeSession } from "./session.js";
 
 function App() {
   const [session, setSession] = useState(loadSession);
+  const [sessionNotice, setSessionNotice] = useState("");
 
   function update(next) {
     storeSession(next);
     setSession(next);
   }
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback((notice = "") => {
     storeSession(null);
     setSession(null);
+    setSessionNotice(typeof notice === "string" ? notice : "");
   }, []);
-  const handleLoggedIn = (data) => update({ ...data, profile: null });
+  const handleLoggedIn = (data) => {
+    setSessionNotice("");
+    update({ ...data, profile: null });
+  };
   const handleSelect = (profile) => update({ ...session, profile });
 
   // Guards: no session -> /login; session without a profile -> /profiles.
@@ -41,7 +46,11 @@ function App() {
         <Route
           path="/login"
           element={
-            session ? <Navigate to="/profiles" replace /> : <Login onLoggedIn={handleLoggedIn} />
+            session ? (
+              <Navigate to="/profiles" replace />
+            ) : (
+              <Login onLoggedIn={handleLoggedIn} notice={sessionNotice} />
+            )
           }
         />
         <Route
@@ -62,7 +71,11 @@ function App() {
           path="/recommendations"
           element={requireProfile(
             session?.profile ? (
-              <Recommendations token={session.access_token} profileId={session.profile.id} />
+              <Recommendations
+                token={session.access_token}
+                profileId={session.profile.id}
+                onSignOut={signOut}
+              />
             ) : null
           )}
         />
@@ -70,7 +83,11 @@ function App() {
           path="/movie/:id"
           element={requireProfile(
             session?.profile ? (
-              <MovieDetail token={session.access_token} profileId={session.profile.id} />
+              <MovieDetail
+                token={session.access_token}
+                profileId={session.profile.id}
+                onSignOut={signOut}
+              />
             ) : null
           )}
         />
