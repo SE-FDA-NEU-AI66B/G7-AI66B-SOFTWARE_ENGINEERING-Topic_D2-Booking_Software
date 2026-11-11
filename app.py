@@ -1,7 +1,9 @@
 import os
+import sqlite3
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -19,6 +21,33 @@ app.include_router(profiles_router)
 class RatingRequest(BaseModel):
     movie_id: int
     score: int
+
+
+def _database_is_readable() -> bool:
+    """Return True if the app can open the database and read a real table.
+
+    Reading the `movie` table (not just `SELECT 1`) matters: SQLite silently
+    creates an empty file when the path does not exist, so `SELECT 1` would
+    pass even though the app has no data.
+    """
+    conn = None
+    try:
+        conn = get_conn()
+        conn.execute("SELECT 1 FROM movie LIMIT 1").fetchone()
+        return True
+    except sqlite3.Error:
+        return False
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+@app.get("/health")
+def health():
+    """Health check for the host (Render): 200 if the DB is readable, else 503."""
+    if _database_is_readable():
+        return {"status": "ok"}
+    return JSONResponse(status_code=503, content={"status": "unavailable"})
 
 
 @app.get("/api/v1/movies/{movie_id}")
