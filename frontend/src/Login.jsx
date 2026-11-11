@@ -6,7 +6,7 @@ const MESSAGES = {
   401: "The email or password is incorrect. Check both and try again.",
 };
 
-function Login({ onLoggedIn }) {
+function Login({ onLoggedIn, notice }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -44,9 +44,14 @@ function Login({ onLoggedIn }) {
         <div className="login-body">
           <h1>Sign in</h1>
 
-          {error && (
+          {error && !error && (
             <div className="login-error" role="alert">
               {error}
+            </div>
+          )}
+          {notice && !error && (
+            <div className="login-error" role="alert">
+              {notice}
             </div>
           )}
 

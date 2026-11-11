@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import "./profiles.css";
 
-export default function Recommendations({ token, profileId }) {
+export default function Recommendations({ token, profileId, onSignOut }) {
   const [state, setState] = useState({ status: "loading", movies: [], mode: null });
   const [attempt, setAttempt] = useState(0);
   const [params] = useSearchParams();
@@ -15,6 +15,10 @@ export default function Recommendations({ token, profileId }) {
       headers: { Authorization: `Bearer ${token}`, "X-Profile-Id": String(profileId) },
     })
       .then((r) => {
+        if (r.status === 401) {
+          onSignOut("Your session has expired. Sign in again.");
+          return null;
+        }
         if (!r.ok) {
           if (r.status === 503)
             return r.json().then((body) => {
@@ -31,7 +35,7 @@ export default function Recommendations({ token, profileId }) {
         }));
       })
       .then((result) => {
-        if (cancelled) return;
+        if (cancelled || !result) return;
         if (result.noCandidates) {
           setState({ status: "no-candidates", movies: [], mode: null });
         } else {
@@ -48,7 +52,7 @@ export default function Recommendations({ token, profileId }) {
     return () => {
       cancelled = true;
     };
-  }, [attempt, token, profileId, genreId]);
+  }, [attempt, token, profileId, genreId, onSignOut]);
 
   function retry() {
     setState({ status: "loading", movies: [], mode: null });
@@ -58,8 +62,8 @@ export default function Recommendations({ token, profileId }) {
   if (state.status === "loading") return <p>Loading recommendations...</p>;
   if (state.status === "error")
     return (
-      <p>
-        We can't reach the server. <button onClick={retry}>Try again</button>
+      <p role="alert">
+        We can't reach the server. <button className="link" onClick={retry}>Try again</button>
       </p>
     );
   if (state.status === "empty")
@@ -72,8 +76,8 @@ export default function Recommendations({ token, profileId }) {
   if (state.status === "no-candidates")
     return (
       <p role="alert">
-        No movies currently qualify for the cold-start list (at least 100 ratings).{" "}
-        <Link to="/recommendations/setup">Try again later</Link>
+        Fewer than 10 movies currently have at least 100 ratings, so the cold-start list isn't available yet.{" "}
+        Try again when more movies qualify. <Link to="/recommendations/setup">Choose a genre</Link>
       </p>
     );
 
