@@ -77,7 +77,7 @@ export default function Recommendations({ token, profileId, onSignOut }) {
     return (
       <p role="alert">
         Fewer than 10 movies currently have at least 100 ratings, so the cold-start list isn't available yet.{" "}
-        Try again when more movies qualify. <Link to="/recommendations/setup">Choose another genre</Link>
+        Try again when more movies qualify. <Link to="/recommendations/setup">Choose a genre</Link>
       </p>
     );
 

@@ -168,7 +168,7 @@ LOADING                         EMPTY
  
 ERROR (server unreachable)      ERROR (cold-start list unavailable)
 +---------------------------+   +--------------------------------+
-|  We can't reach the       |   |  No movies currently qualify   |
+|  We can't reach the       |   |                                |
 |  server. [ Try again ]    |   |  Fewer than 10 have at least   |
 +---------------------------+   |  100 ratings; the list isn't   |
                                 |  available yet. Try again when |
@@ -228,8 +228,10 @@ Users never see status codes, raw API text or stack traces. Each row is the exac
 | Recommendations | `200` with an empty list for a genre | BR4 | No movies found for "{genre}". |
 | Movie detail | `400` score outside 1–10 | US02 | Your rating was not saved. Ratings must be between 1 and 10. Choose a number from 1 to 10 and press Save rating. |
 | Movie detail | `404` movie not found | — | This movie does not exist. Go back to the list and choose another movie. |
-| Any signed-in screen | `401` expired or invalid token | — | Your session has expired. Sign in again. The app returns to the sign-in screen. |
-| Movie detail | server unreachable while loading, saving or marking | — | We can't reach the server. Try again. A Try again button repeats the failed request. |
+| Any signed-in screen | `401` expired or invalid token | — | Your session has expired. Sign in again. |
+| Movie detail | server unreachable while loading, saving or marking | — | We can't reach the server. Try again. |
+| Movie detail | `5xx` while saving a rating | — | Your rating was not saved. The server couldn't complete the request. Try again. |
+| Movie detail | `5xx` while marking as watched | — | We couldn't mark this movie as watched. The server couldn't complete the request. Try again. |
  
 When the session has expired or is missing (`401`), the app returns the user to the sign-in screen. When no profile is chosen (`400`), the app sends the user to Who's watching?.
  
