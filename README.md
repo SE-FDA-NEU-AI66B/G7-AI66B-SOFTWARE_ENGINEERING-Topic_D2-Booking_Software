@@ -28,6 +28,14 @@ Then create a virtual environment, install the requirements, build the frontend,
 
 Run the automated tests with `python -m pytest -v` (no running server or real database needed).
 
+## Render deployment
+
+Public app: <https://smartcine.onrender.com/>.
+
+The root [render.yaml](render.yaml) configures one free Python Web Service. The build installs Python dependencies and builds the React app; the start command seeds SQLite from `data/movies.csv` and starts FastAPI. Render generates `JWT_SECRET`, checks `/health`, and deploys after linked CI checks pass.
+
+The free service sleeps after 15 minutes without traffic, so its first request after sleeping can take about a minute. Its local filesystem is temporary: SQLite data, including account changes, ratings, and watch history, is lost on restart, spin-down, or redeploy. The database is rebuilt from the checked-in movie CSV at startup.
+
 ## Try it
 
 Run the app with the [Setup guide](docs/SETUP.md), then open <http://localhost:5000/>.
