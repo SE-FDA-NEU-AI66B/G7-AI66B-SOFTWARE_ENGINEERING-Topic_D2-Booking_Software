@@ -55,7 +55,7 @@ jobs:
 
       - name: Lint
         run: ruff check . --output-format=github
-        # continue-on-error: true   # Week 1-6: warn only. Remove this line from Sprint 2 onward.
+      
 
       - name: Test
         run: pytest -v --cov --cov-report=term-missing --junitxml=junit.xml

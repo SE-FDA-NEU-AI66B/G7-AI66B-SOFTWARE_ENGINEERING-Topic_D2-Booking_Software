@@ -1,6 +1,31 @@
 # SmartCine
 
+**Live app:** <https://smartcine.onrender.com/>
+
+[![CI](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/actions/workflows/ci.yml/badge.svg)](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/actions/workflows/ci.yml)
+
 SmartCine is a movie recommendation web app that answers "what should I watch next?". Choose a profile, pick a genre, and get up to 10 movies. New profiles see the trending movies of the genre they pick; once a profile has rated or watched 5 movies, the list is ranked by the genres it rates highest and hides movies it has already watched.
+
+**Test account:** `demo@smartcine.test` / `Demo@1234` (two profiles: Alex and Sam)
+
+> **Heads up:** the free server sleeps after 15 minutes without traffic, so the first request can take about a minute. Ratings, watch history and account changes are reset every time the server restarts.
+
+## Try it
+
+Open the [live app](https://smartcine.onrender.com/), or run it locally with the [Setup guide](docs/SETUP.md) and open <http://localhost:5000/>.
+
+**P0 stories and where each starts:**
+
+| Story | Where it starts |
+|---|---|
+| US10 — Select a profile before watching | Sign in at `/#/login`, then you land on `/#/profiles` |
+| US06 — Ask for a theme before recommending | `/#/recommendations/setup` (opens after choosing a profile); pick a genre and press **Continue**. The genre applies to new and experienced profiles |
+| US01 — Cold-start recommendations | Press **Get recommendations** on the setup page (`/#/recommendations`) |
+| US03 — Personalized recommendations | Same page, after the profile has rated or watched 5 movies |
+| US02 — Rate a watched movie | Click a movie title in the list (`/#/movie/:id`) |
+| US04 — Exclude watched movies | Press **Mark as watched** or rate a movie; it disappears from the list |
+
+Full status of every story: [docs/ui.md](docs/ui.md).
 
 ## Team
 
@@ -11,7 +36,7 @@ SmartCine is a movie recommendation web app that answers "what should I watch ne
 | Nguyen Vinh Hung | Nvhwng | Member |
 | Be Thanh Dat | th3dummyking | Member |
 
-Scrum Master: @KatsuroHuy (Sprint 1), @th3dummyking (Sprint 2), @Nvhwng (Sprint 3), @phuonglinhtla (Sprint 4)
+Scrum Master: @KatsuroHuy (Sprint 1), @th3dummyking (Sprint 2), @Nvhwng (Sprint 3), @phuonglinhtla (Sprint 4), @KatsuroHuy (Sprint 5)
 Board: https://github.com/orgs/SE-FDA-NEU-AI66B/projects/9
 Setup Guide: https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/blob/main/docs/SETUP.md
 
@@ -35,22 +60,3 @@ Public app: <https://smartcine.onrender.com/>.
 The root [render.yaml](render.yaml) configures one free Python Web Service. The build installs Python dependencies and builds the React app; the start command seeds SQLite from `data/movies.csv` and starts FastAPI. Render generates `JWT_SECRET`, checks `/health`, and deploys after linked CI checks pass.
 
 The free service sleeps after 15 minutes without traffic, so its first request after sleeping can take about a minute. Its local filesystem is temporary: SQLite data, including account changes, ratings, and watch history, is lost on restart, spin-down, or redeploy. The database is rebuilt from the checked-in movie CSV at startup.
-
-## Try it
-
-Run the app with the [Setup guide](docs/SETUP.md), then open <http://localhost:5000/>.
-
-**Test account:** `demo@smartcine.test` / `Demo@1234` (two profiles: Alex and Sam)
-
-**P0 stories and where each starts:**
-
-| Story | Where it starts |
-|---|---|
-| US10 — Select a profile before watching | Sign in at `/#/login`, then you land on `/#/profiles` |
-| US06 — Ask for a theme before recommending | `/#/recommendations/setup` (opens after choosing a profile); pick a genre and press **Continue**. The genre applies to new and experienced profiles |
-| US01 — Cold-start recommendations | Press **Get recommendations** on the setup page (`/#/recommendations`) |
-| US03 — Personalized recommendations | Same page, after the profile has rated or watched 5 movies |
-| US02 — Rate a watched movie | Click a movie title in the list (`/#/movie/:id`) |
-| US04 — Exclude watched movies | Press **Mark as watched** or rate a movie; it disappears from the list |
-
-Full status of every story: [docs/ui.md](docs/ui.md).
