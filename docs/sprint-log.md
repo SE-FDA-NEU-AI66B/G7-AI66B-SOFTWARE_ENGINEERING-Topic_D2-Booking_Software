@@ -4,6 +4,20 @@ One section per sprint. Fill it in **during** the sprint, not the night before
 the milestone deadline - the commit timestamps on this file are part of the
 evidence that the process was real.
 
+## All sprints at a glance
+
+| Sprint | Weeks | Scrum Master | Goal | Committed | Completed | Velocity |
+|--------|-------|--------------|------|-----------|-----------|----------|
+| 1 | 5–6 | @KatsuroHuy | Agree on vision, personas, scenarios, business rules and screens so all 10 user stories are clear and testable | 0 | 0 | n/a (requirements sprint) |
+| 2 | 7–8 | @th3dummyking | Architecture, data model, API design and ADRs documented; walking skeleton runs end to end | 0 | 0 | n/a (design sprint) |
+| 3 | 9–10 | @Nvhwng | P0 screens work end to end in the browser | not tracked | not tracked | not tracked |
+| 4 | 11–12 | @phuonglinhtla | Every P0 story checked by `pytest`; fix the US06 cold-start genre bug | 30 | 30 | 30 |
+| 5 | 13–14 | @KatsuroHuy | Public https URL, deploys only after green CI, operations documented | 30 | 27 | 27 |
+
+Sprints 1–2 had no story points (requirements and design work) and Sprint 3 points were not tracked, so velocity is only meaningful for Sprints 4 and 5.
+
+ ---
+
 ---
 
 ## Sprint N - <start date> to <end date>
@@ -68,9 +82,6 @@ has no goal and you are just doing tasks.>
 Goal: Agree on the product vision, personas, scenarios, business rules, and screens/flow so all 10 user stories are clear and testable before implementation begins.
 Committed 0 · Completed 0 · Velocity: not applicable (requirements sprint)
 Not finished: none.
-
-## Sprint 2 (week 7-8)
-Goal: making the walking skeleton, the main designs idea and choices.
 SM Sprint 2: @th3dummyking
 
 
@@ -86,7 +97,7 @@ Committed: not tracked · Completed: not tracked · Velocity: not tracked
 Not finished: US06 only partly works (the cold-start list ignores the chosen genre); landing page `/` not started.
 SM Sprint 4: @phuonglinhtla
 
-## Sprint 4(weeks 11-12)
+## Sprint 4 (weeks 11-12)
 
 ### Sprint goal
 Every P0 story is checked by automated tests that run with one command (`pytest`), and the US06 bug found by those tests (cold-start ignores the chosen genre) is fixed.
@@ -144,6 +155,8 @@ Every P0 story is checked by automated tests that run with one command (`pytest`
 
 | Keep doing | Stop doing | Start doing |
 |------------|------------|-------------|
+| | | |
+
 **One concrete action for next sprint (with an owner):** 
 ### Attendance
 
@@ -153,3 +166,84 @@ Every P0 story is checked by automated tests that run with one command (`pytest`
 | @Nvhwng |YES | | |
 | @th3dummyking |YES | | |
 | @phuonglinhtla |YES| | |
+
+
+
+## Sprint 5 (weeks 13–14)
+
+### Sprint goal
+Anyone can open SmartCine at a public https URL; every merge to `main` is checked by CI and deployed only when CI is green; operations are documented.
+
+Scrum Master: @KatsuroHuy
+
+### Two required chore issues
+
+| Issue | Owner | Closed? |
+|-------|-------|---------|
+| [Chore] Refine backlog for Sprint 5 (#__) | @KatsuroHuy (PO) | |
+| [Chore] Sprint 5 wrap-up (#__) | @KatsuroHuy (SM) | |
+
+### Committed
+
+| Issue | Story | Points | Owner |
+|-------|-------|--------|-------|
+| #__ Refine backlog for Sprint 5 | process | 1 | @KatsuroHuy |
+| #__ Add GET /health with tests | #23 | 2 | @phuonglinhtla |
+| #__ Make CI check the frontend and fail on lint errors | #23 | 2 | @th3dummyking |
+| #__ Deploy to a public https URL with deploy-after-green | #23 | 5 | @Nvhwng |
+| #__ Protect `main` | #23 | 1 | @th3dummyking |
+| #__ Refuse to start in production without JWT_SECRET | #23 | 2 | @phuonglinhtla |
+| #__ Clear refusal messages when a business rule says no | #24 | 3 | @Nvhwng |
+| #__ README first screen for the public URL | process | 2 | @phuonglinhtla |
+| #__ docs/operations.md part 1 (sections 1 to 3) | #23 | 3 | @th3dummyking |
+| #__ docs/operations.md part 2 (sections 4 to 6) | #23 | 3 | @Nvhwng |
+| #__ Prepare and rehearse the final demo | process | 3 | @KatsuroHuy |
+| #__ Release v1.0 on the deployed commit | #23 | 1 | @phuonglinhtla |
+| #__ Sprint 5 section and five-sprint table in sprint-log.md | process | 1 | @KatsuroHuy |
+| #__ Sprint 5 wrap-up | process | 1 | @KatsuroHuy |
+
+**Total committed: 30 points**
+
+### Result
+
+| Issue | Points | Status | If not done, why |
+|-------|--------|--------|------------------|
+| #__ | 1 | Done | |
+| #__ | 2 | Done | |
+| #__ | 2 | Done | |
+| #__ | 5 | Done | |
+| #__ | 1 | Done | |
+| #__ | 2 | Done | |
+| #__ | 3 | Done | |
+| #__ | 2 | Done | |
+| #__ | 3 | Done | |
+| #__ | 3 | Done | |
+| #__ | 3 | In Progress | In a rush so we couldn't update the real status |
+| #__ | 1 | Done | |
+| #__ | 1 | Done | |
+| #__ | 1 | Done | |
+
+**Completed: 27 points. Velocity this sprint: 27**
+
+### Sprint Review
+
+- What we demonstrated:
+- Feedback received:
+- Backlog changes as a result:
+
+### Retrospective
+
+| Keep doing | Stop doing | Start doing |
+|------------|------------|-------------|
+| | | |
+
+**One concrete action for next sprint (with an owner):**
+
+### Attendance
+
+| Member | Planning | Review | Retro |
+|--------|----------|--------|-------|
+| @KatsuroHuy | | | |
+| @Nvhwng | | | |
+| @th3dummyking | | | |
+| @phuonglinhtla | | | |
