@@ -44,7 +44,7 @@ function Login({ onLoggedIn, notice }) {
         <div className="login-body">
           <h1>Sign in</h1>
 
-          {error && !error && (
+          {error && (
             <div className="login-error" role="alert">
               {error}
             </div>
