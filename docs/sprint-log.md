@@ -68,7 +68,11 @@ has no goal and you are just doing tasks.>
 Goal: Agree on the product vision, personas, scenarios, business rules, and screens/flow so all 10 user stories are clear and testable before implementation begins.
 Committed 0 · Completed 0 · Velocity: not applicable (requirements sprint)
 Not finished: none.
+
+## Sprint 2 (week 7-8)
+Goal: making the walking skeleton, the main designs idea and choices.
 SM Sprint 2: @th3dummyking
+
 
 ## Sprint 2 (weeks 7–8)
 Goal: architecture, data model, API design and ADRs are documented, and one real route (walking skeleton) runs end-to-end against a seeded database.

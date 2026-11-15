@@ -1,5 +1,57 @@
 # Operations
 
+How SmartCine is run, released, checked and watched. Sections 1 to 3 are written here; the later sections are filled by issue #11.
+
+## 1. How to run and release
+
+SmartCine runs as one web service on **Render** at **[URL: https://<service-name>.onrender.com]**. FastAPI serves both the API and the built React app.
+
+A new version reaches production in three steps:
+
+1. Open a pull request, get CI green and a review from another member, then merge it into `main`. The `main` ruleset requires a pull request and blocks force pushes and deletion. It does not require CI to pass, so a green run is a team rule, not a technical block.
+2. CI runs on the merge commit (see section 2).
+3. Render sees the new commit on `main` and deploys it automatically. Check that the deploy shows "Live" and that `/health` returns 200.
+
+**Rollback (revert and redeploy).** Use this when a release breaks the app:
+
+1. `git switch main && git pull`
+2. `git revert <sha-of-the-bad-commit>` (add `-m 1` if it is a merge commit).
+3. `git switch -c revert/<issue-number>` then `git push -u origin revert/<issue-number>`.
+4. Open a PR with `Closes #<issue>`, wait for CI to go green, get a review, merge.
+5. Render deploys the revert. Check `/health` again.
+
+## 2. The CI pipeline
+
+`.github/workflows/ci.yml` runs on every push and on pull requests to `main` and `develop`. A newer push to the same branch cancels the older run.
+
+| Job | What it checks |
+|---|---|
+| Detect stack | Looks for `requirements.txt` (Python) and a root `package.json` (Node) to decide which jobs run. |
+| Python tests | Python 3.12: installs `requirements.txt`, runs `ruff check` (warn only, never fails the run), then `pytest` with coverage. Fails if any test fails. |
+| Node build and tests | Would run lint, test and build. It is currently **skipped**, because the repo has no root `package.json`; the frontend in `frontend/` is not built in CI. |
+| No secrets committed | Scans tracked files for credential-looking strings, and fails if `.env`, `.sql`, `.sqlite` or `.dump` files are committed. |
+
+A run takes about **[N] minutes**. Latest green run on `main`: **[link to the run]**.
+
+Branch protection for `main` is the active ruleset `main-protection`. It requires a pull request before merging, blocks force pushes and restricts deletion. It has no "require status checks" rule.
+
+![Branch protection settings for main](images/branch-protection.png)
+
+## 3. Monitoring
+
+**What is logged.** The app has no logging code of its own. Uvicorn writes its startup lines and one access line per request (method, path, status code) to standard output. On Render, read them under the service's **Logs** tab.
+
+**What is never logged.** Passwords, login tokens and personal data. The login body and the `Authorization` header are not part of an access line, and the code never prints them.
+
+**`/health`.** It opens the database and reads the `movie` table. It returns `200 {"status": "ok"}` if that works and `503 {"status": "unavailable"}` if not. An empty database file fails the check on purpose.
+
+**Two numbers to watch.**
+
+- **Error rate:** the share of requests answered with a 5xx status.
+- **Response time:** how long requests take to be answered.
+
+Both are on the service's **Metrics** tab on Render. We would notice a problem in three ways: Render's health check on `/health` fails and Render reports it, a deploy fails, or the 5xx share or response time on the Metrics tab jumps after a release.
+
 ## 4. Known risks and technical debt
 
 | Item | Layer | What could happen | Plan |
