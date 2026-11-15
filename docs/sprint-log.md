@@ -101,7 +101,7 @@ Every P0 story is checked by automated tests that run with one command (`pytest`
 ### Committed
 
 | Issue | Story | Points | Owner |
-|-------|-------|--------|-------|
+|-------|--------|--------|-------|
 | #99 Refine backlog for Sprint 4 | process | 1 | @KatsuroHuy |
 | #100 Expand seed data to 14 movies per genre | US01, US06 | 2 | @th3dummyking |
 | #101 Shared test fixtures in tests/conftest.py | US01 | 2 | @Nvhwng |
