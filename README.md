@@ -2,11 +2,11 @@
 
 **Live app:** <https://smartcine.onrender.com/>
 
+**Test account:** `demo@smartcine.test` / `Demo@1234` (two profiles: Alex and Sam)
+
 [![CI](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/actions/workflows/ci.yml/badge.svg)](https://github.com/SE-FDA-NEU-AI66B/G7-AI66B-SOFTWARE_ENGINEERING-Topic_D2-Booking_Software/actions/workflows/ci.yml)
 
 SmartCine is a movie recommendation web app that answers "what should I watch next?". Choose a profile, pick a genre, and get up to 10 movies. New profiles see the trending movies of the genre they pick; once a profile has rated or watched 5 movies, the list is ranked by the genres it rates highest and hides movies it has already watched.
-
-**Test account:** `demo@smartcine.test` / `Demo@1234` (two profiles: Alex and Sam)
 
 > **Heads up:** the free server sleeps after 15 minutes without traffic, so the first request can take about a minute. Ratings, watch history and account changes are reset every time the server restarts.
 
