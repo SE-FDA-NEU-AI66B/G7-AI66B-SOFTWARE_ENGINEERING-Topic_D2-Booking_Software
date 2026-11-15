@@ -81,6 +81,26 @@ def ensure_schema_and_seed(conn: sqlite3.Connection) -> None:
     )
     conn.commit()
 
+MIN_JWT_SECRET_LENGTH = 32
+
+
+def validate_jwt_secret() -> None:
+    """Refuse to start in production without a strong JWT_SECRET.
+
+    Outside production the built-in development secret is still allowed, so
+    local runs and tests need no setup. In production a missing or short
+    secret would let anyone forge login tokens, so we stop the app instead.
+    """
+    if os.environ.get("APP_ENV", "").strip().lower() != "production":
+        return
+    secret = os.environ.get("JWT_SECRET", "")
+    if len(secret) < MIN_JWT_SECRET_LENGTH:
+        raise RuntimeError(
+            "JWT_SECRET must be set to at least "
+            f"{MIN_JWT_SECRET_LENGTH} characters when APP_ENV=production."
+        )
+
+
 def _jwt_secret() -> str:
     return os.environ.get("JWT_SECRET", "dev-only-secret-change-me-in-env-0123456789")
 

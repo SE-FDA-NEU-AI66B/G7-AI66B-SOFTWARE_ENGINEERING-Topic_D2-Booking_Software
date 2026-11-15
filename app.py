@@ -7,11 +7,12 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from auth import get_conn, get_current_profile
+from auth import get_conn, get_current_profile, validate_jwt_secret
 from auth import router as auth_router
 from profiles import router as profiles_router
 
 load_dotenv()
+validate_jwt_secret()  # Production must not run with a missing or weak secret.
 
 app = FastAPI(title="SmartCine")
 app.include_router(auth_router)

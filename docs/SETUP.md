@@ -49,6 +49,11 @@ Copy `.env.example` to `.env`:
 No values need to be changed — the defaults (`DB_PATH=data/smartcine.db`,`PORT=5000`, `MOVIES_CSV=data/movies.csv`) are enough to run locally.
 `JWT_SECRET` is the key that signs login tokens; the placeholder in
 `.env.example` is fine for local use. Never commit your `.env` file.
+`APP_ENV` tells the app where it runs. It is `development` by default, which is
+what you want on your own computer. When `APP_ENV=production` (set for the
+public app in `render.yaml`), the app refuses to start unless `JWT_SECRET` is
+set to at least 32 characters, so a weak or missing secret never reaches
+production. Do not set `APP_ENV=production` in your local `.env`.
 
 ## 4. Create and seed the database
 
